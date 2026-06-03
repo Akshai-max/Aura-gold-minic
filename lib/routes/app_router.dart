@@ -1,0 +1,78 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+
+import '../core/constants/permissions.dart';
+import '../core/widgets/app_shell.dart';
+import '../features/audit/presentation/audit_screen.dart';
+import '../features/auth/presentation/auth_controller.dart';
+import '../features/auth/presentation/login_screen.dart';
+import '../features/auth/presentation/password_screens.dart';
+import '../features/auth/presentation/register_screen.dart';
+import '../features/dashboard/presentation/dashboard_screen.dart';
+import '../features/profile/presentation/profile_screen.dart';
+import '../features/roles/presentation/roles_screen.dart';
+import '../features/settings/presentation/settings_screen.dart';
+import '../features/users/presentation/users_screen.dart';
+
+final appRouterProvider = Provider<GoRouter>((ref) {
+  final auth = ref.watch(authControllerProvider);
+  return GoRouter(
+    initialLocation: '/dashboard',
+    redirect: (context, state) {
+      final path = state.uri.path;
+      final public =
+          {'/login', '/register', '/forgot-password'}.contains(path) ||
+          path.startsWith('/reset-password');
+      if (!auth.isAuthenticated && !public) return '/login';
+      if (auth.isAuthenticated && public) return '/dashboard';
+      if (!_hasPermission(path, auth.permissions, auth.user?.role)) {
+        return '/dashboard';
+      }
+      return null;
+    },
+    routes: [
+      GoRoute(path: '/login', builder: (_, __) => const LoginScreen()),
+      GoRoute(path: '/register', builder: (_, __) => const RegisterScreen()),
+      GoRoute(
+        path: '/forgot-password',
+        builder: (_, __) => const ForgotPasswordScreen(),
+      ),
+      GoRoute(
+        path: '/reset-password/:token',
+        builder: (_, state) =>
+            ResetPasswordScreen(token: state.pathParameters['token']!),
+      ),
+      ShellRoute(
+        builder: (_, __, child) => AppShell(child: child),
+        routes: [
+          GoRoute(
+            path: '/dashboard',
+            builder: (_, __) => const DashboardScreen(),
+          ),
+          GoRoute(path: '/profile', builder: (_, __) => const ProfileScreen()),
+          GoRoute(path: '/users', builder: (_, __) => const UsersScreen()),
+          GoRoute(path: '/roles', builder: (_, __) => const RolesScreen()),
+          GoRoute(path: '/audit', builder: (_, __) => const AuditScreen()),
+          GoRoute(
+            path: '/settings',
+            builder: (_, __) => const SettingsScreen(),
+          ),
+        ],
+      ),
+    ],
+  );
+});
+
+bool _hasPermission(String path, List<String> permissions, String? role) {
+  if (path.startsWith('/users')) {
+    return permissions.contains(Permissions.userRead);
+  }
+  if (path.startsWith('/roles')) return role == AppRoles.admin;
+  if (path.startsWith('/audit')) {
+    return permissions.contains(Permissions.auditRead);
+  }
+  if (path.startsWith('/settings')) {
+    return permissions.contains(Permissions.settingsManage);
+  }
+  return true;
+}
