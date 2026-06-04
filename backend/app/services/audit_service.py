@@ -21,4 +21,3 @@ def record_audit(
             audit_metadata=metadata or {},
         )
     )
-

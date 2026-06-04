@@ -11,7 +11,9 @@ router = APIRouter()
 
 
 @router.get("", response_model=SettingRead)
-def get_settings(db: DbSession, _=Depends(require_permission("settings.manage"))) -> PlatformSetting:
+def get_settings(
+    db: DbSession, _=Depends(require_permission("settings.manage"))
+) -> PlatformSetting:
     return _settings(db)
 
 
@@ -38,4 +40,3 @@ def _settings(db: DbSession) -> PlatformSetting:
         db.commit()
         db.refresh(settings)
     return settings
-

@@ -40,7 +40,9 @@ def create_user(
     )
     db.add(user)
     db.flush()
-    record_audit(db, action="User Creation", entity="user", actor_id=actor.id, entity_id=str(user.id))
+    record_audit(
+        db, action="User Creation", entity="user", actor_id=actor.id, entity_id=str(user.id)
+    )
     db.commit()
     return user_to_read(user)
 
@@ -68,8 +70,12 @@ def update_user(
         if role is None:
             raise HTTPException(status_code=400, detail="Invalid role")
         user.role = role
-        record_audit(db, action="Role Assignment", entity="user", actor_id=actor.id, entity_id=str(user.id))
-    record_audit(db, action="User Updates", entity="user", actor_id=actor.id, entity_id=str(user.id))
+        record_audit(
+            db, action="Role Assignment", entity="user", actor_id=actor.id, entity_id=str(user.id)
+        )
+    record_audit(
+        db, action="User Updates", entity="user", actor_id=actor.id, entity_id=str(user.id)
+    )
     db.commit()
     return user_to_read(user)
 
@@ -84,6 +90,8 @@ def reset_user_password(
     if user is None:
         raise HTTPException(status_code=404, detail="User not found")
     user.hashed_password = hash_password("Temp@12345")
-    record_audit(db, action="Password Changes", entity="user", actor_id=actor.id, entity_id=str(user.id))
+    record_audit(
+        db, action="Password Changes", entity="user", actor_id=actor.id, entity_id=str(user.id)
+    )
     db.commit()
     return {"temporary_password": "Temp@12345"}

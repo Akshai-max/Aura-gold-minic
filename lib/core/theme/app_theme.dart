@@ -4,7 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../storage/preferences_service.dart';
 
 const _gold = Color(0xFFD4AF37);
-const _darkSurface = Color(0xFF11100D);
+const _darkBg = Color(0xFF0B0F1A);
+const _darkSurface = Color(0xFF161B26);
+const _success = Color(0xFF22C55E);
+const _loss = Color(0xFFEF4444);
 
 final themeModeProvider = StateNotifierProvider<ThemeModeController, ThemeMode>(
   (ref) => ThemeModeController(ref.watch(preferencesServiceProvider)),
@@ -31,16 +34,24 @@ class AppTheme {
     );
     return ThemeData(
       useMaterial3: true,
-      colorScheme: scheme.copyWith(primary: _gold),
-      appBarTheme: const AppBarTheme(centerTitle: false),
-      inputDecorationTheme: const InputDecorationTheme(
-        border: OutlineInputBorder(),
+      colorScheme: scheme.copyWith(
+        primary: _gold,
+        error: _loss,
+      ),
+      appBarTheme: const AppBarTheme(
+        centerTitle: false,
+        elevation: 0,
+      ),
+      inputDecorationTheme: InputDecorationTheme(
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        filled: true,
+        fillColor: Colors.grey.shade100,
       ),
       cardTheme: const CardThemeData(
         elevation: 0,
         margin: EdgeInsets.zero,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.all(Radius.circular(8)),
+          borderRadius: BorderRadius.all(Radius.circular(16)),
         ),
       ),
     );
@@ -54,23 +65,36 @@ class AppTheme {
     );
     return ThemeData(
       useMaterial3: true,
-      colorScheme: scheme.copyWith(primary: _gold, surface: _darkSurface),
-      scaffoldBackgroundColor: const Color(0xFF090907),
+      colorScheme: scheme.copyWith(
+        primary: _gold,
+        surface: _darkSurface,
+        error: _loss,
+      ),
+      scaffoldBackgroundColor: _darkBg,
       appBarTheme: const AppBarTheme(
-        backgroundColor: _darkSurface,
+        backgroundColor: _darkBg,
+        elevation: 0,
         centerTitle: false,
       ),
-      inputDecorationTheme: const InputDecorationTheme(
-        border: OutlineInputBorder(),
+      inputDecorationTheme: InputDecorationTheme(
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        filled: true,
+        fillColor: _darkSurface,
       ),
       cardTheme: const CardThemeData(
         elevation: 0,
         margin: EdgeInsets.zero,
-        color: Color(0xFF171510),
+        color: _darkSurface,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.all(Radius.circular(8)),
+          borderRadius: BorderRadius.all(Radius.circular(16)),
         ),
       ),
     );
   }
 }
+
+extension ColorSchemeExtension on ColorScheme {
+  Color get success => _success;
+  Color get loss => _loss;
+}
+

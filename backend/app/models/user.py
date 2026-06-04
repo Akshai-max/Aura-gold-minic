@@ -27,4 +27,3 @@ class User(Base):
 
     role = relationship("Role", back_populates="users")
     refresh_tokens = relationship("RefreshToken", back_populates="user")
-

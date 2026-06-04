@@ -77,4 +77,3 @@ def register_user(db: Session, *, data, role_name: str = "USER") -> User:
     db.flush()
     record_audit(db, action="User Creation", entity="user", entity_id=str(user.id))
     return user
-

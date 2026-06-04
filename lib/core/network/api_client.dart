@@ -70,13 +70,15 @@ class TokenInterceptor extends Interceptor {
 
   final Dio _dio;
   final SecureStorageService _storage;
+  Future<void>? _refreshFuture;
 
   @override
   Future<void> onError(
     DioException err,
     ErrorInterceptorHandler handler,
   ) async {
-    if (err.response?.statusCode != 401) {
+    if (err.response?.statusCode != 401 ||
+        err.requestOptions.path == AuthEndpoints.refresh) {
       return handler.next(err);
     }
 
@@ -87,24 +89,38 @@ class TokenInterceptor extends Interceptor {
     }
 
     try {
-      final response = await _dio.post(
-        AuthEndpoints.refresh,
-        data: {'refresh_token': refreshToken},
-        options: Options(headers: {'Authorization': null}),
-      );
-      final data = response.data as Map<String, dynamic>;
-      await _storage.saveTokens(
-        accessToken: data['access_token'] as String,
-        refreshToken: data['refresh_token'] as String,
-      );
-      final accessToken = data['access_token'] as String;
-      err.requestOptions.headers['Authorization'] = 'Bearer $accessToken';
-      final retry = await _dio.fetch<dynamic>(err.requestOptions);
-      return handler.resolve(retry);
+      _refreshFuture ??= _performRefresh(refreshToken);
+      await _refreshFuture;
     } catch (_) {
       await _storage.clearTokens();
       return handler.next(err);
+    } finally {
+      _refreshFuture = null;
     }
+
+    try {
+      final accessToken = await _storage.getAccessToken();
+      if (accessToken != null) {
+        err.requestOptions.headers['Authorization'] = 'Bearer $accessToken';
+      }
+      final retry = await _dio.fetch<dynamic>(err.requestOptions);
+      return handler.resolve(retry);
+    } catch (e) {
+      return handler.next(err);
+    }
+  }
+
+  Future<void> _performRefresh(String refreshToken) async {
+    final response = await _dio.post(
+      AuthEndpoints.refresh,
+      data: {'refresh_token': refreshToken},
+      options: Options(headers: {'Authorization': null}),
+    );
+    final data = response.data as Map<String, dynamic>;
+    await _storage.saveTokens(
+      accessToken: data['access_token'] as String,
+      refreshToken: data['refresh_token'] as String,
+    );
   }
 }
 

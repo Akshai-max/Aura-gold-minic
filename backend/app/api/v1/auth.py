@@ -1,8 +1,7 @@
 from datetime import UTC, datetime
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, HTTPException
 from sqlalchemy import select
-from sqlalchemy.orm import Session
 
 from app.api.v1.deps import CurrentUser, DbSession
 from app.core.security import hash_password, hash_token
@@ -76,7 +75,9 @@ def reset_password(payload: ResetPasswordRequest, db: DbSession) -> dict[str, st
     user = db.scalar(select(User).where(User.email == payload.token.lower()))
     if user:
         user.hashed_password = hash_password(payload.password)
-        record_audit(db, action="Password Changes", entity="user", actor_id=user.id, entity_id=str(user.id))
+        record_audit(
+            db, action="Password Changes", entity="user", actor_id=user.id, entity_id=str(user.id)
+        )
         db.commit()
     return {"status": "ok"}
 
@@ -86,4 +87,3 @@ def verify_email(user: CurrentUser, db: DbSession) -> dict[str, str]:
     user.email_verified = True
     db.commit()
     return {"status": "verified"}
-

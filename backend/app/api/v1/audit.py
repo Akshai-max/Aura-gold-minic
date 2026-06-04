@@ -26,4 +26,3 @@ def list_audit_logs(
         )
         for row in rows
     ]
-

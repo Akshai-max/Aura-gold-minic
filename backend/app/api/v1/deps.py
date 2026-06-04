@@ -48,4 +48,3 @@ def require_role(*roles: str):
         return user
 
     return dependency
-

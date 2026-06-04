@@ -29,6 +29,26 @@ class AppShell extends ConsumerWidget {
         icon: Icons.person_outline,
         label: 'Profile',
       ),
+      const _ShellDestination(
+        route: '/wallet',
+        icon: Icons.account_balance_wallet_outlined,
+        label: 'Wallet',
+      ),
+      const _ShellDestination(
+        route: '/portfolio',
+        icon: Icons.pie_chart_outline,
+        label: 'Portfolio',
+      ),
+      const _ShellDestination(
+        route: '/gold-price',
+        icon: Icons.show_chart,
+        label: 'Gold Price',
+      ),
+      const _ShellDestination(
+        route: '/transactions',
+        icon: Icons.receipt_long_outlined,
+        label: 'Transactions',
+      ),
       if (canManageUsers)
         const _ShellDestination(
           route: '/users',
@@ -52,6 +72,23 @@ class AppShell extends ConsumerWidget {
           route: '/settings',
           icon: Icons.tune_outlined,
           label: 'Settings',
+        ),
+      const _ShellDestination(
+        route: '/orders',
+        icon: Icons.history,
+        label: 'Trading History',
+      ),
+      if (auth.user?.role == AppRoles.admin)
+        const _ShellDestination(
+          route: '/gold-settings',
+          icon: Icons.price_change_outlined,
+          label: 'Gold Settings',
+        ),
+      if (auth.user?.role == AppRoles.admin)
+        const _ShellDestination(
+          route: '/admin-trading-settings',
+          icon: Icons.settings_input_component_outlined,
+          label: 'Trading Settings',
         ),
     ];
 

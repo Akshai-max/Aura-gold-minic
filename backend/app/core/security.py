@@ -37,4 +37,3 @@ def new_refresh_token() -> str:
 
 def hash_token(token: str) -> str:
     return sha256(token.encode("utf-8")).hexdigest()
-

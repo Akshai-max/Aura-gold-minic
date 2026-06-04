@@ -13,4 +13,3 @@ class PlatformSetting(Base):
     contact_number: Mapped[str] = mapped_column(String(30), default="+91-0000000000")
     maintenance_mode: Mapped[bool] = mapped_column(Boolean, default=False)
     app_version: Mapped[str] = mapped_column(String(40), default="0.1.0")
-

@@ -22,4 +22,3 @@ DEFAULT_PERMISSIONS = [
 @router.get("", response_model=list[str])
 def list_permissions(_=Depends(require_permission("role.manage"))) -> list[str]:
     return DEFAULT_PERMISSIONS
-
