@@ -38,13 +38,13 @@ def seed() -> None:
         db.flush()
 
         admin_role = db.scalar(select(Role).where(Role.name == "ADMIN"))
-        admin = db.scalar(select(User).where(User.email == "admin@auragold.com"))
+        admin = db.scalar(select(User).where(User.email == "admin@ags.com"))
         if admin is None:
             db.add(
                 User(
                     first_name="Admin",
                     last_name="User",
-                    email="admin@auragold.com",
+                    email="admin@ags.com",
                     mobile_number="+910000000000",
                     hashed_password=hash_password("Admin@123"),
                     role=admin_role,
@@ -53,13 +53,13 @@ def seed() -> None:
             )
 
         shareholder_role = db.scalar(select(Role).where(Role.name == "SHAREHOLDER"))
-        shareholder = db.scalar(select(User).where(User.email == "shareholder@auragold.com"))
+        shareholder = db.scalar(select(User).where(User.email == "shareholder@ags.com"))
         if shareholder is None:
             db.add(
                 User(
                     first_name="Shareholder",
                     last_name="User",
-                    email="shareholder@auragold.com",
+                    email="shareholder@ags.com",
                     mobile_number="+919876543210",
                     hashed_password=hash_password("Shareholder@123"),
                     role=shareholder_role,
@@ -68,13 +68,13 @@ def seed() -> None:
             )
 
         user_role = db.scalar(select(Role).where(Role.name == "USER"))
-        user = db.scalar(select(User).where(User.email == "user@auragold.com"))
+        user = db.scalar(select(User).where(User.email == "user@ags.com"))
         if user is None:
             db.add(
                 User(
                     first_name="Regular",
                     last_name="User",
-                    email="user@auragold.com",
+                    email="user@ags.com",
                     mobile_number="+919123456789",
                     hashed_password=hash_password("User@123"),
                     role=user_role,

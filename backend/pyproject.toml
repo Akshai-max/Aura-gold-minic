@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "aura-gold-api"
 version = "0.1.0"
-description = "Aura Gold FastAPI platform foundation"
+description = "AGS FastAPI platform foundation"
 requires-python = ">=3.12"
 dependencies = [
   "fastapi>=0.115.0",

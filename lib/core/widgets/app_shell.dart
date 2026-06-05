@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/constants/permissions.dart';
 import '../../features/auth/presentation/auth_controller.dart';
+import '../theme/app_colors.dart';
+import 'royal_components.dart';
 
 class AppShell extends ConsumerWidget {
   const AppShell({required this.child, super.key});
@@ -21,12 +23,12 @@ class AppShell extends ConsumerWidget {
     final destinations = <_ShellDestination>[
       const _ShellDestination(
         route: '/dashboard',
-        icon: Icons.dashboard_outlined,
+        icon: Icons.space_dashboard_outlined,
         label: 'Dashboard',
       ),
       const _ShellDestination(
         route: '/profile',
-        icon: Icons.person_outline,
+        icon: Icons.person_outline_rounded,
         label: 'Profile',
       ),
       const _ShellDestination(
@@ -36,12 +38,12 @@ class AppShell extends ConsumerWidget {
       ),
       const _ShellDestination(
         route: '/portfolio',
-        icon: Icons.pie_chart_outline,
+        icon: Icons.donut_small_outlined,
         label: 'Portfolio',
       ),
       const _ShellDestination(
         route: '/gold-price',
-        icon: Icons.show_chart,
+        icon: Icons.candlestick_chart_outlined,
         label: 'Gold Price',
       ),
       const _ShellDestination(
@@ -52,30 +54,30 @@ class AppShell extends ConsumerWidget {
       if (canManageUsers)
         const _ShellDestination(
           route: '/users',
-          icon: Icons.people_outline,
+          icon: Icons.people_outline_rounded,
           label: 'Users',
         ),
       if (auth.user?.role == AppRoles.admin)
         const _ShellDestination(
           route: '/roles',
-          icon: Icons.admin_panel_settings_outlined,
+          icon: Icons.shield_outlined,
           label: 'Roles',
         ),
       if (canReadAudit)
         const _ShellDestination(
           route: '/audit',
-          icon: Icons.receipt_long_outlined,
+          icon: Icons.fact_check_outlined,
           label: 'Audit',
         ),
       if (canManageSettings)
         const _ShellDestination(
           route: '/settings',
-          icon: Icons.tune_outlined,
+          icon: Icons.tune_rounded,
           label: 'Settings',
         ),
       const _ShellDestination(
         route: '/orders',
-        icon: Icons.history,
+        icon: Icons.history_rounded,
         label: 'Trading History',
       ),
       if (auth.user?.role == AppRoles.admin)
@@ -92,21 +94,40 @@ class AppShell extends ConsumerWidget {
         ),
     ];
 
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Aura Gold'),
+        title: const Text('AGS'),
         actions: [
           IconButton(
             tooltip: 'Settings',
             onPressed: canManageSettings ? () => context.go('/settings') : null,
-            icon: const Icon(Icons.settings_outlined),
+            icon: const Icon(Icons.tune_outlined),
           ),
           IconButton(
             tooltip: 'Logout',
             onPressed: () => ref.read(authControllerProvider.notifier).logout(),
-            icon: const Icon(Icons.logout),
+            icon: const Icon(Icons.logout_rounded),
           ),
         ],
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Container(
+            height: 1,
+            margin: const EdgeInsets.symmetric(horizontal: 16),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Colors.transparent,
+                  AppColors.royalGold.withValues(alpha: 0.45),
+                  Colors.transparent,
+                ],
+              ),
+            ),
+          ),
+        ),
       ),
       drawer: NavigationDrawer(
         selectedIndex: _selectedIndex(context, destinations),
@@ -115,9 +136,17 @@ class AppShell extends ConsumerWidget {
           context.go(destinations[index].route);
         },
         children: [
-          const Padding(
-            padding: EdgeInsets.all(24),
-            child: Text('Aura Gold', style: TextStyle(fontSize: 22)),
+          const RoyalDrawerHeader(),
+          const RoyalGoldDivider(),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+            child: Text(
+              'NAVIGATION',
+              style: theme.textTheme.labelSmall?.copyWith(
+                letterSpacing: 1.6,
+                color: isDark ? AppColors.onDarkMuted : AppColors.onLightMuted,
+              ),
+            ),
           ),
           for (final destination in destinations)
             NavigationDrawerDestination(

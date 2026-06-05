@@ -25,7 +25,7 @@ class PreferencesService {
     final value = _preferences.getString(_themeKey);
     return ThemeMode.values.firstWhere(
       (mode) => mode.name == value,
-      orElse: () => ThemeMode.system,
+      orElse: () => ThemeMode.dark,
     );
   }
 

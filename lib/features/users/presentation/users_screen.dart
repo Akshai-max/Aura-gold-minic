@@ -8,9 +8,9 @@ class UsersScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const users = [
-      ('Admin User', 'admin@auragold.com', 'ADMIN', true),
-      ('Shareholder One', 'shareholder@auragold.com', 'SHAREHOLDER', true),
-      ('Demo User', 'user@auragold.com', 'USER', false),
+      ('Admin User', 'admin@ags.com', 'ADMIN', true),
+      ('Shareholder One', 'shareholder@ags.com', 'SHAREHOLDER', true),
+      ('Demo User', 'user@ags.com', 'USER', false),
     ];
     return ResponsivePage(
       title: 'Users',

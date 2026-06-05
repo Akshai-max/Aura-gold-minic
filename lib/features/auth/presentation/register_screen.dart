@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/widgets/royal_components.dart';
 import 'auth_controller.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
@@ -36,17 +37,22 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     ref.listen(authControllerProvider, (previous, next) {
       if (next.isAuthenticated) context.go('/dashboard');
     });
-    return Scaffold(
-      appBar: AppBar(title: const Text('Create account')),
-      body: SafeArea(
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 520),
-            child: Form(
-              key: _formKey,
-              child: ListView(
-                padding: const EdgeInsets.all(16),
-                children: [
+    return RoyalAuthScaffold(
+      child: Form(
+        key: _formKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              'Create account',
+              style: Theme.of(context).textTheme.headlineSmall,
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'Join the AGS platform',
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+            const SizedBox(height: 20),
                   TextFormField(
                     controller: _firstName,
                     decoration: const InputDecoration(labelText: 'First Name'),
@@ -96,14 +102,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         value != _password.text ? 'Passwords must match' : null,
                   ),
                   const SizedBox(height: 16),
-                  FilledButton(
-                    onPressed: _submit,
-                    child: const Text('Register'),
-                  ),
-                ],
-              ),
+            FilledButton(
+              onPressed: _submit,
+              child: const Text('CREATE ACCOUNT'),
             ),
-          ),
+          ],
         ),
       ),
     );

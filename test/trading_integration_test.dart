@@ -209,9 +209,9 @@ void main() {
 
       // Login screen
       expect(find.text('Secure platform access'), findsOneWidget);
-      await tester.enterText(find.bySemanticsLabel('Email'), 'user@auragold.com');
+      await tester.enterText(find.bySemanticsLabel('Email address'), 'user@ags.com');
       await tester.enterText(find.bySemanticsLabel('Password'), 'User@123');
-      await tester.tap(find.text('Login'));
+      await tester.tap(find.text('SIGN IN'));
 
       mockAuthController.debugState = AuthState(
         user: mockUser,

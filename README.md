@@ -1,6 +1,6 @@
-# Aura Gold
+# AGS
 
-Production-ready Flutter (Mobile App) and FastAPI (Backend Service) platform for **Aura Gold**, featuring enterprise-grade gold trading workflows.
+Production-ready Flutter (Mobile App) and FastAPI (Backend Service) platform for **AGS**, featuring enterprise-grade gold trading workflows.
 
 ---
 
@@ -116,8 +116,8 @@ uvicorn app.main:app --reload
 ```
 
 - Swagger docs will be hosted at: `http://localhost:8000/docs`
-- Default Admin Account: `admin@auragold.com` / `Admin@123`
-- Default User Account: `user@auragold.com` / `User@123`
+- Default Admin Account: `admin@ags.com` / `Admin@123`
+- Default User Account: `user@ags.com` / `User@123`
 
 ### 2. Running the Flutter App
 

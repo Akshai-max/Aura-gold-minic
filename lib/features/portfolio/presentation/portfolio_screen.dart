@@ -169,9 +169,11 @@ class _PortfolioContentState extends ConsumerState<_PortfolioContent> {
     final isPositive = profitLoss >= 0;
     final trendColor = isPositive ? theme.colorScheme.success : theme.colorScheme.error;
 
-    return Column(
-      children: [
-        Card(
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isWide = constraints.maxWidth > 900;
+
+        final overviewCard = Card(
           child: Padding(
             padding: const EdgeInsets.all(18),
             child: Column(
@@ -233,14 +235,39 @@ class _PortfolioContentState extends ConsumerState<_PortfolioContent> {
               ],
             ),
           ),
-        ),
-        const SizedBox(height: 16),
-        _PerformanceMetricsGrid(portfolio: portfolio),
-        const SizedBox(height: 16),
-        _StatsCard(portfolio: portfolio),
-        const SizedBox(height: 16),
-        _AllocationCard(portfolio: portfolio),
-      ],
+        );
+
+        if (!isWide) {
+          return Column(
+            children: [
+              overviewCard,
+              const SizedBox(height: 16),
+              _PerformanceMetricsGrid(portfolio: portfolio),
+              const SizedBox(height: 16),
+              _StatsCard(portfolio: portfolio),
+              const SizedBox(height: 16),
+              _AllocationCard(portfolio: portfolio),
+            ],
+          );
+        }
+
+        return Column(
+          children: [
+            overviewCard,
+            const SizedBox(height: 16),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(child: _PerformanceMetricsGrid(portfolio: portfolio)),
+                const SizedBox(width: 16),
+                Expanded(child: _StatsCard(portfolio: portfolio)),
+              ],
+            ),
+            const SizedBox(height: 16),
+            _AllocationCard(portfolio: portfolio),
+          ],
+        );
+      },
     );
   }
 }

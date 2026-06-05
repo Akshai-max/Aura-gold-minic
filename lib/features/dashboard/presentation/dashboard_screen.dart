@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 import '../../../core/constants/permissions.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/responsive_page.dart';
+import '../../../core/widgets/royal_components.dart';
 import '../../auth/presentation/auth_controller.dart';
 import '../../gold_price/data/gold_price_repository.dart';
 import '../../gold_price/domain/gold_price.dart';
@@ -36,6 +37,7 @@ class DashboardScreen extends ConsumerWidget {
       },
       child: ResponsivePage(
         title: 'Welcome, ${auth.user?.firstName ?? 'Investor'}',
+        subtitle: 'Your portfolio at a glance',
         children: [
           if (role == AppRoles.admin) ...[
             const AdminDashboardGrid(),
@@ -118,18 +120,9 @@ class PortfolioHeroCard extends ConsumerWidget {
             child: Container(
               height: 180,
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    theme.colorScheme.primary.withValues(alpha: 0.15),
-                    theme.colorScheme.surface,
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: theme.colorScheme.primary.withValues(alpha: 0.2),
-                ),
+                gradient: context.royalTheme.heroGradient,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: context.royalTheme.goldBorder),
               ),
               child: Stack(
                 children: [
@@ -463,8 +456,19 @@ class QuickActionsCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Quick Actions', style: theme.textTheme.titleMedium),
-            const SizedBox(height: 16),
+            Row(
+              children: [
+                Icon(
+                  Icons.bolt_outlined,
+                  size: 18,
+                  color: theme.colorScheme.primary,
+                ),
+                const SizedBox(width: 8),
+                Text('Quick Actions', style: theme.textTheme.titleMedium),
+              ],
+            ),
+            const RoyalGoldDivider(),
+            const SizedBox(height: 12),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
@@ -518,9 +522,15 @@ class _ActionButton extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         child: Column(
           children: [
-            CircleAvatar(
-              backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.1),
-              child: Icon(icon, color: theme.colorScheme.primary),
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: context.royalTheme.surfaceAccent,
+                border: Border.all(color: context.royalTheme.goldBorder),
+              ),
+              child: Icon(icon, color: theme.colorScheme.primary, size: 22),
             ),
             const SizedBox(height: 8),
             Text(

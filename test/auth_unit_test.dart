@@ -25,7 +25,7 @@ void main() {
 
     test('successful login updates status and stores credentials', () async {
       await controller.login(
-        email: 'user@auragold.com',
+        email: 'user@ags.com',
         password: 'User@123',
         rememberMe: true,
       );
@@ -41,7 +41,7 @@ void main() {
 
     test('failed login sets error state', () async {
       await controller.login(
-        email: 'user@auragold.com',
+        email: 'user@ags.com',
         password: 'WrongPassword',
       );
 
@@ -53,7 +53,7 @@ void main() {
     test('logout clears tokens and permissions', () async {
       // Login first
       await controller.login(
-        email: 'user@auragold.com',
+        email: 'user@ags.com',
         password: 'User@123',
       );
 

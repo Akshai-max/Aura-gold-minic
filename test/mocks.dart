@@ -21,7 +21,7 @@ final mockUser = AppUser(
   id: '9',
   firstName: 'Regular',
   lastName: 'User',
-  email: 'user@auragold.com',
+  email: 'user@ags.com',
   mobileNumber: '+919123456789',
   role: 'USER',
   isActive: true,
@@ -130,7 +130,7 @@ class MockAuthRepository implements AuthRepository {
   @override
   Future<AuthSession> login({required String email, required String password}) async {
     loginCalled = true;
-    if (email == 'user@auragold.com' && password == 'User@123') {
+    if (email == 'user@ags.com' && password == 'User@123') {
       return mockAuthSession;
     }
     throw Exception('Invalid credentials');

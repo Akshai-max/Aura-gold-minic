@@ -1,14 +1,18 @@
 import 'package:flutter/material.dart';
 
+import 'royal_components.dart';
+
 class ResponsivePage extends StatelessWidget {
   const ResponsivePage({
     required this.title,
     required this.children,
+    this.subtitle,
     this.actions = const [],
     super.key,
   });
 
   final String title;
+  final String? subtitle;
   final List<Widget> children;
   final List<Widget> actions;
 
@@ -21,20 +25,14 @@ class ResponsivePage extends StatelessWidget {
           child: ConstrainedBox(
             constraints: BoxConstraints(maxWidth: maxWidth),
             child: ListView(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
               children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        title,
-                        style: Theme.of(context).textTheme.headlineSmall,
-                      ),
-                    ),
-                    ...actions,
-                  ],
+                RoyalPageHeader(
+                  title: title,
+                  subtitle: subtitle,
+                  actions: actions,
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 20),
                 ...children,
               ],
             ),
