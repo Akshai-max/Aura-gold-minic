@@ -66,3 +66,19 @@ class GoldSetting(Base):
     current_provider: Mapped[str] = mapped_column(String(80), default="Manual Price Feed")
     update_frequency: Mapped[str] = mapped_column(String(40), default="5 minutes")
     manual_override_price: Mapped[Decimal] = mapped_column(Numeric(14, 2), default=0)
+
+
+class GoldTreasury(Base):
+    """Platform gold reserve managed by admin (treasury)."""
+
+    __tablename__ = "gold_treasury"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    available_gold: Mapped[Decimal] = mapped_column(Numeric(14, 4), default=0)
+    total_supplied: Mapped[Decimal] = mapped_column(Numeric(14, 4), default=0)
+    updated_by: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now(),
+    )

@@ -2,6 +2,9 @@ from sqlalchemy import select
 
 from app.core.security import hash_password
 from app.db.session import SessionLocal
+from decimal import Decimal
+
+from app.models.gold import GoldTreasury
 from app.models.role import Role
 from app.models.setting import PlatformSetting
 from app.models.user import User
@@ -83,6 +86,13 @@ def seed() -> None:
             )
         if db.scalar(select(PlatformSetting)) is None:
             db.add(PlatformSetting())
+        if db.scalar(select(GoldTreasury)) is None:
+            db.add(
+                GoldTreasury(
+                    available_gold=Decimal("1000.0000"),
+                    total_supplied=Decimal("1000.0000"),
+                )
+            )
         db.commit()
     finally:
         db.close()

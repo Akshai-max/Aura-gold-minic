@@ -27,6 +27,7 @@ import '../features/orders/domain/order.dart';
 import '../features/payments/presentation/payment_status_screen.dart';
 import '../features/transaction_details/presentation/transaction_details_screen.dart';
 import '../features/settings/presentation/admin_trading_settings_screen.dart';
+import '../features/treasury/presentation/admin_treasury_screen.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   final auth = ref.watch(authControllerProvider);
@@ -131,6 +132,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             path: '/admin-trading-settings',
             builder: (_, __) => const AdminTradingSettingsScreen(),
           ),
+          GoRoute(
+            path: '/treasury',
+            builder: (_, __) => const AdminTreasuryScreen(),
+          ),
         ],
       ),
     ],
@@ -150,5 +155,6 @@ bool _hasPermission(String path, List<String> permissions, String? role) {
   }
   if (path.startsWith('/gold-settings')) return role == AppRoles.admin;
   if (path.startsWith('/admin-trading-settings')) return role == AppRoles.admin;
+  if (path.startsWith('/treasury')) return role == AppRoles.admin;
   return true;
 }

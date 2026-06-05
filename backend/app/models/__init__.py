@@ -6,6 +6,7 @@ from app.models.user import User
 from app.models.gold import (
     GoldPrice,
     GoldSetting,
+    GoldTreasury,
     LedgerTransaction,
     PortfolioSnapshot,
     Wallet,
@@ -27,6 +28,7 @@ __all__ = [
     "PortfolioSnapshot",
     "GoldPrice",
     "GoldSetting",
+    "GoldTreasury",
     "LedgerTransaction",
     "Order",
     "Payment",

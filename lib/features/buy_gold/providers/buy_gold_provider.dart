@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../gold_price/data/gold_price_repository.dart';
 import '../../settings/providers/trading_settings_provider.dart';
+import '../../treasury/providers/treasury_provider.dart';
 import '../../orders/domain/order.dart';
 import '../data/buy_gold_repository.dart';
 
@@ -11,6 +12,7 @@ class BuyGoldState {
     this.goldCost = 0.0,
     this.fees = 0.0,
     this.taxes = 0.0,
+    this.spotRate = 0.0,
     this.buyRate = 0.0,
     this.error,
     this.isLoading = false,
@@ -24,6 +26,7 @@ class BuyGoldState {
   final double goldCost;
   final double fees;
   final double taxes;
+  final double spotRate;
   final double buyRate;
   final String? error;
   final bool isLoading;
@@ -37,6 +40,7 @@ class BuyGoldState {
     double? goldCost,
     double? fees,
     double? taxes,
+    double? spotRate,
     double? buyRate,
     String? error,
     bool clearError = false,
@@ -51,6 +55,7 @@ class BuyGoldState {
       goldCost: goldCost ?? this.goldCost,
       fees: fees ?? this.fees,
       taxes: taxes ?? this.taxes,
+      spotRate: spotRate ?? this.spotRate,
       buyRate: buyRate ?? this.buyRate,
       error: clearError ? null : (error ?? this.error),
       isLoading: isLoading ?? this.isLoading,
@@ -76,6 +81,10 @@ class BuyGoldNotifier extends StateNotifier<BuyGoldState> {
     _ref.listen(tradingSettingsProvider, (previous, next) {
       _recalculate();
     }, fireImmediately: true);
+
+    _ref.listen(treasuryProvider, (previous, next) {
+      _recalculate();
+    }, fireImmediately: true);
   }
 
   void updateAmount(double amount) {
@@ -99,14 +108,16 @@ class BuyGoldNotifier extends StateNotifier<BuyGoldState> {
   void _recalculate() {
     final priceState = _ref.read(goldPriceProvider);
     final settingsState = _ref.read(tradingSettingsProvider);
+    final treasuryState = _ref.read(treasuryProvider);
 
-    if (priceState.isLoading || settingsState.isLoading) {
+    if (priceState.isLoading || settingsState.isLoading || treasuryState.isLoading) {
       state = state.copyWith(isLoading: true);
       return;
     }
 
     final marketPrice = priceState.value?.currentPrice ?? 0.0;
     final settings = settingsState.value;
+    final treasuryGold = treasuryState.value?.availableGold ?? 0.0;
 
     if (marketPrice <= 0 || settings == null) {
       state = state.copyWith(
@@ -127,6 +138,7 @@ class BuyGoldNotifier extends StateNotifier<BuyGoldState> {
       if (amount <= 0) {
         state = state.copyWith(
           isLoading: false,
+          spotRate: marketPrice,
           buyRate: buyRate,
           goldCost: 0,
           fees: 0,
@@ -155,10 +167,14 @@ class BuyGoldNotifier extends StateNotifier<BuyGoldState> {
         error = 'Minimum purchase amount is ₹${settings.minimumPurchaseAmount}';
       } else if (amount > settings.maximumPurchaseAmount) {
         error = 'Maximum purchase amount is ₹${settings.maximumPurchaseAmount}';
+      } else if (goldQuantity > treasuryGold) {
+        error =
+            'Only ${treasuryGold.toStringAsFixed(4)} g available in treasury';
       }
 
       state = state.copyWith(
         isLoading: false,
+        spotRate: marketPrice,
         buyRate: buyRate,
         goldCost: adjustedCost,
         fees: fees,
@@ -171,6 +187,7 @@ class BuyGoldNotifier extends StateNotifier<BuyGoldState> {
       if (quantity <= 0) {
         state = state.copyWith(
           isLoading: false,
+          spotRate: marketPrice,
           buyRate: buyRate,
           goldCost: 0,
           fees: 0,
@@ -190,10 +207,14 @@ class BuyGoldNotifier extends StateNotifier<BuyGoldState> {
         error = 'Order value ₹$amount is below minimum ₹${settings.minimumPurchaseAmount}';
       } else if (amount > settings.maximumPurchaseAmount) {
         error = 'Order value ₹$amount is above maximum ₹${settings.maximumPurchaseAmount}';
+      } else if (quantity > treasuryGold) {
+        error =
+            'Only ${treasuryGold.toStringAsFixed(4)} g available in treasury';
       }
 
       state = state.copyWith(
         isLoading: false,
+        spotRate: marketPrice,
         buyRate: buyRate,
         goldCost: goldCost,
         fees: fees,

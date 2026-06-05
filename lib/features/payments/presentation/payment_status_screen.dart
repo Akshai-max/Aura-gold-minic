@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../orders/domain/order.dart';
 import '../../gold_wallet/data/wallet_repository.dart';
+import '../../treasury/providers/treasury_provider.dart';
 import '../providers/payment_provider.dart';
 
 final _currency = NumberFormat.currency(locale: 'en_IN', symbol: '₹');
@@ -117,7 +118,8 @@ class PaymentStatusScreen extends ConsumerWidget {
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
                   onPressed: () {
-                    ref.invalidate(walletProvider); // instantly refresh wallet balances
+                    ref.invalidate(walletProvider);
+                    ref.invalidate(treasuryProvider);
                     context.go('/wallet');
                   },
                   child: const Text('View Wallet Balance', style: TextStyle(fontWeight: FontWeight.bold)),

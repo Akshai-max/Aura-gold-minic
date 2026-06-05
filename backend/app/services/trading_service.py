@@ -9,6 +9,7 @@ from app.models.gold import Wallet, LedgerTransaction, PortfolioSnapshot
 from app.models.trading import Order, Payment, Trade, TradingSetting
 from app.schemas.trading import OrderCreate, PaymentVerify, TradingSettingsUpdate
 from app.services.gold_service import GoldPriceService
+from app.services.treasury_service import TreasuryService
 
 
 class TradingService:
@@ -19,8 +20,8 @@ class TradingService:
         settings = self.db.scalar(select(TradingSetting))
         if settings is None:
             settings = TradingSetting(
-                buy_margin=Decimal("1.50"),
-                sell_margin=Decimal("1.00"),
+                buy_margin=Decimal("4.00"),
+                sell_margin=Decimal("2.00"),
                 daily_limit=Decimal("100000.00"),
                 minimum_purchase_amount=Decimal("10.00"),
                 maximum_purchase_amount=Decimal("50000.00"),
@@ -119,6 +120,8 @@ class TradingService:
         else:
             raise Exception("Must specify either amount or gold_quantity")
 
+        TreasuryService(self.db).ensure_available(gold_quantity)
+
         order = Order(
             user_id=user_id,
             order_type="BUY",
@@ -216,6 +219,8 @@ class TradingService:
         wallet.gold_balance += order.gold_quantity
         wallet.available_gold += order.gold_quantity
         wallet.total_invested += order.amount
+
+        TreasuryService(self.db).deduct(order.gold_quantity)
 
         # Create Ledger Transaction
         transaction = LedgerTransaction(
@@ -322,6 +327,8 @@ class TradingService:
         wallet.total_invested -= cost_basis
         if wallet.total_invested < Decimal("0"):
             wallet.total_invested = Decimal("0")
+
+        TreasuryService(self.db).add(gold_quantity)
 
         # Create Ledger Transaction
         transaction = LedgerTransaction(

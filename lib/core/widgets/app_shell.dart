@@ -92,6 +92,12 @@ class AppShell extends ConsumerWidget {
           icon: Icons.settings_input_component_outlined,
           label: 'Trading Settings',
         ),
+      if (auth.user?.role == AppRoles.admin)
+        const _ShellDestination(
+          route: '/treasury',
+          icon: Icons.account_balance_outlined,
+          label: 'Gold Treasury',
+        ),
     ];
 
     final theme = Theme.of(context);

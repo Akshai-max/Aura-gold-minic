@@ -9,6 +9,7 @@ from app.api.v1 import (
     roles,
     settings,
     transactions,
+    treasury,
     users,
     wallet,
     buy,
@@ -36,3 +37,4 @@ api_router.include_router(orders.router, prefix="/orders", tags=["orders"])
 api_router.include_router(payments.router, prefix="/payments", tags=["payments"])
 api_router.include_router(trades.router, prefix="/trades", tags=["trades"])
 api_router.include_router(trading_settings.router, prefix="/trading-settings", tags=["trading-settings"])
+api_router.include_router(treasury.router, prefix="/treasury", tags=["treasury"])

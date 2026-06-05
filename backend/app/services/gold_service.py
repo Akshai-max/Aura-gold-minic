@@ -14,6 +14,7 @@ from app.schemas.gold import (
     PricePoint,
     WalletRead,
 )
+from app.services.gold_price_sync import sync_live_gold_price
 
 def _parse_frequency_delta(value: str) -> timedelta:
     clean = value.lower().strip()
@@ -32,6 +33,24 @@ class GoldPriceService:
     def __init__(self, db: Session) -> None:
         self.db = db
 
+    def sync_live_price(self, force: bool = False) -> GoldPrice | None:
+        settings = self.settings()
+        if not settings.auto_price_feed_enabled or settings.manual_override_price > 0:
+            return None
+
+        latest = self.db.scalar(
+            select(GoldPrice).order_by(desc(GoldPrice.created_at), desc(GoldPrice.id))
+        )
+        if not force and latest is not None:
+            latest_created = latest.created_at
+            if latest_created.tzinfo is None:
+                latest_created = latest_created.replace(tzinfo=UTC)
+            freq = _parse_frequency_delta(settings.update_frequency)
+            if datetime.now(UTC) - latest_created < freq:
+                return latest
+
+        return sync_live_gold_price(self.db)
+
     def current_price(self) -> GoldPriceRead:
         settings = self.settings()
         prices = list(
@@ -39,77 +58,14 @@ class GoldPriceService:
         )
         latest = prices[0] if prices else None
 
-        # Fetch from API if auto feed is enabled and no manual override is active
-        if settings.auto_price_feed_enabled and settings.manual_override_price <= 0:
-            freq = _parse_frequency_delta(settings.update_frequency)
-            now = datetime.now(UTC)
-            needs_fetch = True
-            if latest is not None:
-                latest_created = latest.created_at
-                if latest_created.tzinfo is None:
-                    latest_created = latest_created.replace(tzinfo=UTC)
-                if now - latest_created < freq:
-                    needs_fetch = False
-
-            if needs_fetch:
-                provider_lower = settings.current_provider.lower()
-                if "massive" in provider_lower:
-                    try:
-                        import urllib.request
-                        import json
-                        api_key = "nJAf2ePTTkJD5tgyaOSqeiBuEsgIyEl6"
-                        # 1. Fetch Gold/USD aggregate
-                        url_gold = f"https://api.massive.com/v2/aggs/ticker/C:XAUUSD/prev?apiKey={api_key}"
-                        req_gold = urllib.request.Request(url_gold, headers={'User-Agent': 'Mozilla/5.0'})
-                        with urllib.request.urlopen(req_gold, timeout=5) as resp_gold:
-                            data_gold = json.loads(resp_gold.read().decode())
-                            gold_usd = Decimal(str(data_gold["results"][0]["c"]))
-                        
-                        # 2. Fetch USD/INR aggregate
-                        url_inr = f"https://api.massive.com/v2/aggs/ticker/C:USDINR/prev?apiKey={api_key}"
-                        req_inr = urllib.request.Request(url_inr, headers={'User-Agent': 'Mozilla/5.0'})
-                        with urllib.request.urlopen(req_inr, timeout=5) as resp_inr:
-                            data_inr = json.loads(resp_inr.read().decode())
-                            usd_inr = Decimal(str(data_inr["results"][0]["c"]))
-
-                        # Convert ounces to grams and scale to INR
-                        price_per_gram = ((gold_usd * usd_inr) / Decimal("31.1034768")).quantize(Decimal("0.01"))
-                        new_price = GoldPrice(
-                            gold_type="24K",
-                            price=price_per_gram,
-                            source="MassiveAPI",
-                        )
-                        self.db.add(new_price)
-                        self.db.commit()
-                        self.db.refresh(new_price)
-                        prices.insert(0, new_price)
-                        latest = new_price
-                    except Exception as e:
-                        print(f"Error fetching from MassiveAPI: {e}")
-                else:
-                    try:
-                        import urllib.request
-                        import json
-                        api_key = "60566186b0932101fe906cc81ee02262"
-                        url = f"https://api.metalpriceapi.com/v1/latest?api_key={api_key}&base=XAU&currencies=INR"
-                        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
-                        with urllib.request.urlopen(req, timeout=5) as response:
-                            data = json.loads(response.read().decode())
-                            if data.get("success"):
-                                rate_inr_ounce = Decimal(str(data["rates"]["INR"]))
-                                price_per_gram = (rate_inr_ounce / Decimal("31.1034768")).quantize(Decimal("0.01"))
-                                new_price = GoldPrice(
-                                    gold_type="24K",
-                                    price=price_per_gram,
-                                    source="MetalPriceAPI",
-                                )
-                                self.db.add(new_price)
-                                self.db.commit()
-                                self.db.refresh(new_price)
-                                prices.insert(0, new_price)
-                                latest = new_price
-                    except Exception as e:
-                        print(f"Error fetching from MetalPriceAPI: {e}")
+        synced = self.sync_live_price()
+        if synced is not None:
+            prices = list(
+                self.db.scalars(
+                    select(GoldPrice).order_by(desc(GoldPrice.created_at), desc(GoldPrice.id)).limit(30)
+                )
+            )
+            latest = prices[0] if prices else synced
 
         if settings.manual_override_price > 0:
             current = settings.manual_override_price
@@ -155,7 +111,11 @@ class GoldPriceService:
     def settings(self) -> GoldSetting:
         settings = self.db.scalar(select(GoldSetting))
         if settings is None:
-            settings = GoldSetting()
+            settings = GoldSetting(
+                auto_price_feed_enabled=True,
+                current_provider="MetalPriceAPI",
+                update_frequency="5 minutes",
+            )
             self.db.add(settings)
             self.db.commit()
             self.db.refresh(settings)

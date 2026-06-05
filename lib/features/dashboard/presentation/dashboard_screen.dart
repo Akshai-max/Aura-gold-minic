@@ -16,6 +16,7 @@ import '../../gold_wallet/domain/gold_wallet.dart';
 import '../../portfolio/data/portfolio_repository.dart';
 import '../../portfolio/domain/portfolio.dart';
 import '../../portfolio/presentation/portfolio_screen.dart';
+import '../../treasury/providers/treasury_provider.dart';
 
 final _currency = NumberFormat.currency(locale: 'en_IN', symbol: '₹');
 
@@ -703,17 +704,35 @@ class _ErrorCard extends StatelessWidget {
 }
 
 /// Admin Dashboard grid
-class AdminDashboardGrid extends StatelessWidget {
+class AdminDashboardGrid extends ConsumerWidget {
   const AdminDashboardGrid({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+  Widget build(BuildContext context, WidgetRef ref) {
+    final treasuryAsync = ref.watch(treasuryProvider);
     final metricCards = [
+      treasuryAsync.when(
+        data: (treasury) => _AdminMetricCard(
+          label: 'Treasury Gold',
+          value: '${treasury.availableGold.toStringAsFixed(2)} g',
+          icon: Icons.account_balance,
+          onTap: () => context.go('/treasury'),
+        ),
+        loading: () => const _AdminMetricCard(
+          label: 'Treasury Gold',
+          value: '...',
+          icon: Icons.account_balance,
+        ),
+        error: (_, __) => _AdminMetricCard(
+          label: 'Treasury Gold',
+          value: 'N/A',
+          icon: Icons.account_balance,
+          onTap: () => context.go('/treasury'),
+        ),
+      ),
       const _AdminMetricCard(label: 'Total Users', value: '128', icon: Icons.people_outline),
       const _AdminMetricCard(label: 'Active Sessions', value: '117', icon: Icons.bolt),
       const _AdminMetricCard(label: 'RBAC Roles', value: '3', icon: Icons.security),
-      const _AdminMetricCard(label: 'Audit Events', value: '412', icon: Icons.history),
     ];
 
     return Column(
@@ -729,6 +748,16 @@ class AdminDashboardGrid extends StatelessWidget {
           children: metricCards,
         ),
         const SizedBox(height: 16),
+        Card(
+          child: ListTile(
+            leading: const Icon(Icons.account_balance_outlined),
+            title: const Text('Manage Gold Treasury'),
+            subtitle: const Text('Set available gold for user buy/sell operations'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.go('/treasury'),
+          ),
+        ),
+        const SizedBox(height: 16),
         const GoldPriceWidget(),
       ],
     );
@@ -740,17 +769,22 @@ class _AdminMetricCard extends StatelessWidget {
     required this.label,
     required this.value,
     required this.icon,
+    this.onTap,
   });
 
   final String label;
   final String value;
   final IconData icon;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Card(
-      child: Padding(
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
         padding: const EdgeInsets.all(12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -779,6 +813,7 @@ class _AdminMetricCard extends StatelessWidget {
             ),
           ],
         ),
+      ),
       ),
     );
   }

@@ -64,6 +64,16 @@ class GoldSettingsUpdate(BaseModel):
     manual_override_price: Decimal
 
 
+class TreasuryRead(BaseModel):
+    available_gold: Decimal
+    total_supplied: Decimal
+    updated_at: datetime
+
+
+class TreasuryUpdate(BaseModel):
+    available_gold: Decimal
+
+
 class WalletRead(BaseModel):
     wallet_id: int
     user_id: int

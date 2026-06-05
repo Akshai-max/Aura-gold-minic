@@ -21,6 +21,12 @@ class Settings(BaseSettings):
         "http://10.0.2.2:8000",  # Android emulator access to host
         "http://127.0.0.1:8000",
     ]
+    gold_price_api_key: str = Field(default="", alias="GOLD_PRICE_API_KEY")
+    gold_price_api_url: str = Field(
+        default="https://api.metalpriceapi.com/v1/latest",
+        alias="GOLD_PRICE_API_URL",
+    )
+    gold_price_sync_seconds: int = Field(default=300, alias="GOLD_PRICE_SYNC_SECONDS")
 
 
 settings = Settings()

@@ -159,6 +159,55 @@ class _SellGoldScreenState extends ConsumerState<SellGoldScreen> {
               Card(
                 child: Padding(
                   padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text('Live Gold Rates', style: textTheme.titleMedium),
+                          Icon(Icons.show_chart, color: theme.colorScheme.primary),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text('Live Spot', style: textTheme.bodyMedium),
+                          Text(
+                            '${_currency.format(sellState.spotRate)} / g',
+                            style: textTheme.titleMedium,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'You Sell At (-${settings.sellMargin.toStringAsFixed(1)}%)',
+                            style: textTheme.bodyMedium?.copyWith(
+                              color: theme.colorScheme.error,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          Text(
+                            '${_currency.format(sellState.sellRate)} / g',
+                            style: textTheme.headlineSmall?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: theme.colorScheme.primary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -166,16 +215,13 @@ class _SellGoldScreenState extends ConsumerState<SellGoldScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Live Selling Rate (incl. margin deduction)',
+                            'Depreciated sell rate',
                             style: textTheme.bodyMedium?.copyWith(color: Colors.grey),
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            '${_currency.format(sellState.sellRate)} / gram',
-                            style: textTheme.headlineSmall?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: theme.colorScheme.primary,
-                            ),
+                            'Like digital gold platforms, sell price is below live spot.',
+                            style: textTheme.bodySmall,
                           ),
                         ],
                       ),

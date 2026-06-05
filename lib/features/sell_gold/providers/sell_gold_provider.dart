@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../gold_price/data/gold_price_repository.dart';
 import '../../settings/providers/trading_settings_provider.dart';
 import '../../gold_wallet/data/wallet_repository.dart';
+import '../../treasury/providers/treasury_provider.dart';
 import '../../orders/domain/order.dart';
 import '../data/sell_gold_repository.dart';
 
@@ -9,6 +10,7 @@ class SellGoldState {
   const SellGoldState({
     this.amount = 0.0,
     this.goldQuantity = 0.0,
+    this.spotRate = 0.0,
     this.sellRate = 0.0,
     this.availableGold = 0.0,
     this.error,
@@ -20,6 +22,7 @@ class SellGoldState {
 
   final double amount;
   final double goldQuantity;
+  final double spotRate;
   final double sellRate;
   final double availableGold;
   final String? error;
@@ -31,6 +34,7 @@ class SellGoldState {
   SellGoldState copyWith({
     double? amount,
     double? goldQuantity,
+    double? spotRate,
     double? sellRate,
     double? availableGold,
     String? error,
@@ -43,6 +47,7 @@ class SellGoldState {
     return SellGoldState(
       amount: amount ?? this.amount,
       goldQuantity: goldQuantity ?? this.goldQuantity,
+      spotRate: spotRate ?? this.spotRate,
       sellRate: sellRate ?? this.sellRate,
       availableGold: availableGold ?? this.availableGold,
       error: clearError ? null : (error ?? this.error),
@@ -132,6 +137,7 @@ class SellGoldNotifier extends StateNotifier<SellGoldState> {
       if (amount <= 0) {
         state = state.copyWith(
           isLoading: false,
+          spotRate: marketPrice,
           sellRate: sellRate,
           availableGold: available,
           goldQuantity: 0,
@@ -148,6 +154,7 @@ class SellGoldNotifier extends StateNotifier<SellGoldState> {
 
       state = state.copyWith(
         isLoading: false,
+        spotRate: marketPrice,
         sellRate: sellRate,
         availableGold: available,
         goldQuantity: goldQuantity,
@@ -158,6 +165,7 @@ class SellGoldNotifier extends StateNotifier<SellGoldState> {
       if (quantity <= 0) {
         state = state.copyWith(
           isLoading: false,
+          spotRate: marketPrice,
           sellRate: sellRate,
           availableGold: available,
           amount: 0,
@@ -174,6 +182,7 @@ class SellGoldNotifier extends StateNotifier<SellGoldState> {
 
       state = state.copyWith(
         isLoading: false,
+        spotRate: marketPrice,
         sellRate: sellRate,
         availableGold: available,
         amount: amount,
@@ -196,6 +205,7 @@ class SellGoldNotifier extends StateNotifier<SellGoldState> {
       
       // Refresh wallet & portfolio
       _ref.invalidate(walletProvider);
+      _ref.invalidate(treasuryProvider);
       
       return order;
     } catch (e) {

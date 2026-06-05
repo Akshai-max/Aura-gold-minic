@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../../core/widgets/responsive_page.dart';
 import '../../gold_price/data/gold_price_repository.dart';
 import '../../settings/providers/trading_settings_provider.dart';
+import '../../treasury/providers/treasury_provider.dart';
 import '../providers/buy_gold_provider.dart';
 
 final _currency = NumberFormat.currency(locale: 'en_IN', symbol: '₹');
@@ -79,6 +80,7 @@ class _BuyGoldScreenState extends ConsumerState<BuyGoldScreen> {
     final textTheme = theme.textTheme;
     final buyState = ref.watch(buyGoldNotifierProvider);
     final settingsAsync = ref.watch(tradingSettingsProvider);
+    final treasuryAsync = ref.watch(treasuryProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -123,19 +125,40 @@ class _BuyGoldScreenState extends ConsumerState<BuyGoldScreen> {
               Card(
                 child: Padding(
                   padding: const EdgeInsets.all(16),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text('Live Gold Rates', style: textTheme.titleMedium),
+                          Icon(Icons.show_chart, color: theme.colorScheme.primary),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text('Live Spot', style: textTheme.bodyMedium),
+                          Text(
+                            '${_currency.format(buyState.spotRate)} / g',
+                            style: textTheme.titleMedium,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            'Live Purchase Rate (incl. margin)',
-                            style: textTheme.bodyMedium?.copyWith(color: Colors.grey),
+                            'You Buy At (+${settings.buyMargin.toStringAsFixed(1)}%)',
+                            style: textTheme.bodyMedium?.copyWith(
+                              color: theme.colorScheme.primary,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
-                          const SizedBox(height: 4),
                           Text(
-                            '${_currency.format(buyState.buyRate)} / gram',
+                            '${_currency.format(buyState.buyRate)} / g',
                             style: textTheme.headlineSmall?.copyWith(
                               fontWeight: FontWeight.bold,
                               color: theme.colorScheme.primary,
@@ -143,11 +166,40 @@ class _BuyGoldScreenState extends ConsumerState<BuyGoldScreen> {
                           ),
                         ],
                       ),
-                      CircleAvatar(
-                        backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.1),
-                        child: const Icon(Icons.show_chart, color: Colors.amber),
-                      ),
                     ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              treasuryAsync.when(
+                loading: () => const SizedBox.shrink(),
+                error: (_, __) => const SizedBox.shrink(),
+                data: (treasury) => Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Row(
+                      children: [
+                        Icon(Icons.account_balance, color: theme.colorScheme.primary),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Treasury Available',
+                                style: textTheme.bodyMedium?.copyWith(color: Colors.grey),
+                              ),
+                              Text(
+                                '${treasury.availableGold.toStringAsFixed(4)} g',
+                                style: textTheme.titleLarge?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
