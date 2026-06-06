@@ -23,7 +23,10 @@ class AuthNotifier extends AsyncNotifier<AuthStatus> {
   Future<void> login(String token) async {
     state = const AsyncValue.loading();
     try {
-      await _storage.saveTokens(accessToken: token, refreshToken: 'refresh-token-placeholder');
+      await _storage.saveTokens(
+        accessToken: token,
+        refreshToken: 'refresh-token-placeholder',
+      );
       state = const AsyncValue.data(AuthStatus.authenticated);
     } catch (e, st) {
       state = AsyncValue.error(e, st);
@@ -55,11 +58,10 @@ final secureStorageProvider = Provider<ISecureStorage>((ref) {
 final apiClientProvider = Provider<ApiClient>((ref) {
   final storage = ref.watch(secureStorageProvider);
   final env = ref.watch(envConfigProvider);
-  return ApiClient(
-    storageService: storage,
-    config: env,
-  );
+  return ApiClient(storageService: storage, config: env);
 });
 
 // Provides current authentication state using AsyncNotifierProvider
-final authNotifierProvider = AsyncNotifierProvider<AuthNotifier, AuthStatus>(AuthNotifier.new);
+final authNotifierProvider = AsyncNotifierProvider<AuthNotifier, AuthStatus>(
+  AuthNotifier.new,
+);

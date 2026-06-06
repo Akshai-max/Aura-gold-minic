@@ -1,9 +1,10 @@
 from typing import Any, Generic, List, Optional
 from app.repositories.base import BaseRepository, ModelType
 
+
 class BaseService(Generic[ModelType]):
     """Base class for all business services, coordinating calls to the repository layer."""
-    
+
     def __init__(self, repository: BaseRepository[ModelType]):
         self.repository = repository
 

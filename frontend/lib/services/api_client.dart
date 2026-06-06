@@ -17,19 +17,27 @@ abstract class ApiException implements Exception {
 
 class NetworkException extends ApiException {
   NetworkException([String? message])
-      : super(message ?? 'Connection error. Please check your internet connection.');
+    : super(
+        message ?? 'Connection error. Please check your internet connection.',
+      );
 }
 
 class UnauthorizedException extends ApiException {
-  UnauthorizedException([String? message]) : super(message ?? 'Session expired. Please log in again.', 401);
+  UnauthorizedException([String? message])
+    : super(message ?? 'Session expired. Please log in again.', 401);
 }
 
 class ForbiddenException extends ApiException {
-  ForbiddenException([String? message]) : super(message ?? 'You do not have permission to perform this action.', 403);
+  ForbiddenException([String? message])
+    : super(
+        message ?? 'You do not have permission to perform this action.',
+        403,
+      );
 }
 
 class NotFoundException extends ApiException {
-  NotFoundException([String? message]) : super(message ?? 'Requested resource not found.', 404);
+  NotFoundException([String? message])
+    : super(message ?? 'Requested resource not found.', 404);
 }
 
 class ValidationException extends ApiException {
@@ -38,7 +46,8 @@ class ValidationException extends ApiException {
 }
 
 class ServerException extends ApiException {
-  ServerException([String? message]) : super(message ?? 'Server error. Please try again later.', 500);
+  ServerException([String? message])
+    : super(message ?? 'Server error. Please try again later.', 500);
 }
 
 class UnknownApiException extends ApiException {
@@ -49,12 +58,9 @@ class ApiClient {
   late final Dio _dio;
   final ISecureStorage storageService;
 
-  ApiClient({
-    required this.storageService,
-    EnvConfig? config,
-  }) {
+  ApiClient({required this.storageService, EnvConfig? config}) {
     final activeConfig = config ?? EnvConfig.active;
-    
+
     _dio = Dio(
       BaseOptions(
         baseUrl: activeConfig.baseUrl,
@@ -112,26 +118,33 @@ class ApiClient {
       case DioExceptionType.receiveTimeout:
       case DioExceptionType.connectionError:
         return NetworkException();
-        
+
       case DioExceptionType.badResponse:
         final response = error.response;
-        if (response == null) return UnknownApiException('No response received from server.');
-        
+        if (response == null)
+          return UnknownApiException('No response received from server.');
+
         final statusCode = response.statusCode;
         final responseData = response.data;
         String errorMessage = '';
-        
+
         if (responseData is Map && responseData.containsKey('detail')) {
           errorMessage = responseData['detail'].toString();
         }
 
         switch (statusCode) {
           case 401:
-            return UnauthorizedException(errorMessage.isNotEmpty ? errorMessage : null);
+            return UnauthorizedException(
+              errorMessage.isNotEmpty ? errorMessage : null,
+            );
           case 403:
-            return ForbiddenException(errorMessage.isNotEmpty ? errorMessage : null);
+            return ForbiddenException(
+              errorMessage.isNotEmpty ? errorMessage : null,
+            );
           case 404:
-            return NotFoundException(errorMessage.isNotEmpty ? errorMessage : null);
+            return NotFoundException(
+              errorMessage.isNotEmpty ? errorMessage : null,
+            );
           case 422:
             Map<String, dynamic>? errors;
             if (responseData is Map && responseData.containsKey('errors')) {
@@ -143,23 +156,29 @@ class ApiClient {
             );
           default:
             if (statusCode != null && statusCode >= 500) {
-              return ServerException(errorMessage.isNotEmpty ? errorMessage : null);
+              return ServerException(
+                errorMessage.isNotEmpty ? errorMessage : null,
+              );
             }
             return UnknownApiException(
-              errorMessage.isNotEmpty ? errorMessage : 'Server returned status $statusCode',
+              errorMessage.isNotEmpty
+                  ? errorMessage
+                  : 'Server returned status $statusCode',
               statusCode,
             );
         }
 
       case DioExceptionType.cancel:
         return UnknownApiException('Request was cancelled.');
-        
+
       case DioExceptionType.unknown:
       default:
         if (error.error is SocketException) {
           return NetworkException();
         }
-        return UnknownApiException(error.message ?? 'An unknown network error occurred.');
+        return UnknownApiException(
+          error.message ?? 'An unknown network error occurred.',
+        );
     }
   }
 

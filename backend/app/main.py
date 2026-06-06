@@ -13,22 +13,30 @@ from app.middleware.logging_middleware import RequestLoggingMiddleware
 from app.api.health import router as health_router
 from app.database.session import verify_db_connection
 
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
     setup_logging()
     logger.info("app_startup", message="Initializing AGS Gold API services...")
-    
+
     db_connected = await verify_db_connection()
     if db_connected:
-        logger.info("db_connection_success", message="Database connection verified successfully.")
+        logger.info(
+            "db_connection_success",
+            message="Database connection verified successfully.",
+        )
     else:
-        logger.warning("db_connection_failed", message="Could not connect to database on startup. Please verify credentials/server status.")
-        
+        logger.warning(
+            "db_connection_failed",
+            message="Could not connect to database on startup. Please verify credentials/server status.",
+        )
+
     yield
-    
+
     # Shutdown
     logger.info("app_shutdown", message="Shutting down AGS Gold API services...")
+
 
 app = FastAPI(
     title=settings.PROJECT_NAME,

@@ -21,6 +21,7 @@ async_session_maker = async_sessionmaker(
     autoflush=False,
 )
 
+
 async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
     """Dependency injection generator yielding an async database session."""
     async with async_session_maker() as session:
@@ -31,11 +32,13 @@ async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
             raise
         finally:
             await session.close()
-            
+
+
 async def verify_db_connection() -> bool:
     """Helper to verify connection viability during startup checks."""
     try:
         from sqlalchemy import text
+
         async with async_session_maker() as session:
             await session.execute(text("SELECT 1"))
         return True

@@ -5,9 +5,10 @@ from app.models.base import Base
 
 ModelType = TypeVar("ModelType", bound=Base)
 
+
 class BaseRepository(Generic[ModelType]):
     """Generic async repository implementing core CRUD operations for SQLAlchemy models."""
-    
+
     def __init__(self, model: Type[ModelType], db_session: AsyncSession):
         self.model = model
         self.db = db_session
@@ -31,7 +32,9 @@ class BaseRepository(Generic[ModelType]):
             await self.db.refresh(db_obj)
         return db_obj
 
-    async def update(self, db_obj: ModelType, obj_in: dict[str, Any], commit: bool = True) -> ModelType:
+    async def update(
+        self, db_obj: ModelType, obj_in: dict[str, Any], commit: bool = True
+    ) -> ModelType:
         """Update fields on an existing record."""
         for field, value in obj_in.items():
             if hasattr(db_obj, field):

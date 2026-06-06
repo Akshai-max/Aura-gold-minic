@@ -1,8 +1,14 @@
-from typing import List
+from __future__ import annotations
+from typing import List, TYPE_CHECKING
 from sqlalchemy import String, Index
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.models.base import Base, UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin
 from app.models.associations import user_roles, role_permissions
+
+if TYPE_CHECKING:
+    from app.models.user import User
+    from app.models.permission import Permission
+
 
 class Role(Base, UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin):
     __tablename__ = "roles"
