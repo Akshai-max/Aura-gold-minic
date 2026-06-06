@@ -11,11 +11,7 @@ void main() {
     'Invalid API Base URL configured. Check EnvConfig parameters.',
   );
 
-  runApp(
-    const ProviderScope(
-      child: AGSGoldApp(),
-    ),
-  );
+  runApp(const ProviderScope(child: AGSGoldApp()));
 }
 
 class AGSGoldApp extends ConsumerWidget {

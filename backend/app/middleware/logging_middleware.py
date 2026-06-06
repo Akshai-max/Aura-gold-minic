@@ -5,6 +5,7 @@ from app.core.logging import logger
 
 SENSITIVE_KEYS = {"password", "token", "secret", "api_key", "key", "authorization"}
 
+
 def sanitize_params(params: dict) -> dict:
     """Mask sensitive query parameters to prevent credentials leaks in logs."""
     return {
@@ -12,27 +13,28 @@ def sanitize_params(params: dict) -> dict:
         for k, v in params.items()
     }
 
+
 class RequestLoggingMiddleware(BaseHTTPMiddleware):
     """Middleware to log details of every incoming request and outgoing response."""
-    
+
     async def dispatch(self, request: Request, call_next):
         start_time = time.perf_counter()
-        
+
         method = request.method
         path = request.url.path
         query_params = sanitize_params(dict(request.query_params))
-        
+
         logger.info(
             "request_started",
             method=method,
             path=path,
             query_params=query_params,
         )
-        
+
         try:
             response = await call_next(request)
             process_time = time.perf_counter() - start_time
-            
+
             logger.info(
                 "request_completed",
                 method=method,

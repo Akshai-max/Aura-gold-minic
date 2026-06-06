@@ -4,11 +4,11 @@ class AppTheme {
   // Brand Color Palette (HSL-aligned Premium Gold and Slate)
   static const Color primaryGold = Color(0xFFDCA742);
   static const Color secondaryGold = Color(0xFFF3C76F);
-  
+
   static const Color lightBackground = Color(0xFFF7F8FA);
   static const Color lightSurface = Color(0xFFFFFFFF);
   static const Color lightText = Color(0xFF1A1A1E);
-  
+
   static const Color darkBackground = Color(0xFF0D0D11);
   static const Color darkSurface = Color(0xFF16161D);
   static const Color darkText = Color(0xFFECECEF);
@@ -37,7 +37,10 @@ class AppTheme {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: const Color(0xFFF0F1F4),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 16,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide.none,
@@ -98,7 +101,10 @@ class AppTheme {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: const Color(0xFF1D1D26),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 16,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide.none,

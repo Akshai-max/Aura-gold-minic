@@ -2,12 +2,12 @@ name: Flutter CI/CD
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ main, develop, dev ]
     paths:
       - 'frontend/**'
       - '.github/workflows/flutter.yml'
   pull_request:
-    branches: [ main, develop ]
+    branches: [ main, develop, dev ]
     paths:
       - 'frontend/**'
       - '.github/workflows/flutter.yml'

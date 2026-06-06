@@ -38,7 +38,7 @@ class SplashScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 32),
-              
+
               // App Title
               Text(
                 'AGS GOLD',
@@ -49,7 +49,7 @@ class SplashScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 8),
-              
+
               // App Subtitle
               Text(
                 'Enterprise Gold Operations Platform',
@@ -59,7 +59,7 @@ class SplashScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 48),
-              
+
               // Custom smooth progress indicator
               SizedBox(
                 width: 40,

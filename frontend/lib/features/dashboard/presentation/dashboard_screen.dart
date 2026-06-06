@@ -19,7 +19,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Log Out'),
-        content: const Text('Are you sure you want to end your current session?'),
+        content: const Text(
+          'Are you sure you want to end your current session?',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -53,12 +55,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('AGS GOLD', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text(
+          'AGS GOLD',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: _handleLogout,
-          ),
+          IconButton(icon: const Icon(Icons.logout), onPressed: _handleLogout),
         ],
       ),
       body: _buildPageContent(_selectedIndex),
@@ -97,7 +99,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           // Sidebar Navigation
           NavigationRail(
             selectedIndex: _selectedIndex,
-            onDestinationSelected: (index) => setState(() => _selectedIndex = index),
+            onDestinationSelected: (index) =>
+                setState(() => _selectedIndex = index),
             labelType: NavigationRailLabelType.all,
             selectedIconTheme: IconThemeData(color: theme.colorScheme.primary),
             selectedLabelTextStyle: TextStyle(
@@ -158,8 +161,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   _selectedIndex == 0
                       ? 'Dashboard Overview'
                       : _selectedIndex == 1
-                          ? 'Audit Log & Operations'
-                          : 'Settings',
+                      ? 'Audit Log & Operations'
+                      : 'Settings',
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
                 elevation: 0,
@@ -220,25 +223,57 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             ),
           ),
           const SizedBox(height: 24),
-          
+
           // Stats Row (Responsive layout Grid)
           isDesktop
               ? Row(
                   children: [
-                    Expanded(child: _buildStatCard('Total Gold vault', '142.84 kg', Icons.store)),
+                    Expanded(
+                      child: _buildStatCard(
+                        'Total Gold vault',
+                        '142.84 kg',
+                        Icons.store,
+                      ),
+                    ),
                     const SizedBox(width: 16),
-                    Expanded(child: _buildStatCard('Active Users', '24 Users', Icons.people_outline)),
+                    Expanded(
+                      child: _buildStatCard(
+                        'Active Users',
+                        '24 Users',
+                        Icons.people_outline,
+                      ),
+                    ),
                     const SizedBox(width: 16),
-                    Expanded(child: _buildStatCard('System Health', 'Optimal', Icons.check_circle_outline, Colors.green)),
+                    Expanded(
+                      child: _buildStatCard(
+                        'System Health',
+                        'Optimal',
+                        Icons.check_circle_outline,
+                        Colors.green,
+                      ),
+                    ),
                   ],
                 )
               : Column(
                   children: [
-                    _buildStatCard('Total Gold Vault', '142.84 kg', Icons.store),
+                    _buildStatCard(
+                      'Total Gold Vault',
+                      '142.84 kg',
+                      Icons.store,
+                    ),
                     const SizedBox(height: 16),
-                    _buildStatCard('Active Users', '24 Users', Icons.people_outline),
+                    _buildStatCard(
+                      'Active Users',
+                      '24 Users',
+                      Icons.people_outline,
+                    ),
                     const SizedBox(height: 16),
-                    _buildStatCard('System Health', 'Optimal', Icons.check_circle_outline, Colors.green),
+                    _buildStatCard(
+                      'System Health',
+                      'Optimal',
+                      Icons.check_circle_outline,
+                      Colors.green,
+                    ),
                   ],
                 ),
         ],
@@ -255,7 +290,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         children: [
           Text(
             'Recent Audit Trails',
-            style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const SizedBox(height: 16),
           Expanded(
@@ -268,21 +305,29 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   'VAULT_GOLD_DEPOSIT',
                   'PERMISSIONS_MODIFIED',
                   'ROLE_CREATED',
-                  'AUDIT_LOG_EXPORTED'
+                  'AUDIT_LOG_EXPORTED',
                 ];
                 final details = [
                   'superadmin@agsgold.com logged in successfully',
                   '12.50 kg deposited into Vault Sector A',
                   'Added user:write permission to Administrator role',
                   'Role "auditor" initialized successfully',
-                  'Exported range 2026-05-01 to 2026-06-01'
+                  'Exported range 2026-05-01 to 2026-06-01',
                 ];
                 return ListTile(
                   leading: CircleAvatar(
-                    backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.1),
-                    child: Icon(Icons.history, color: theme.colorScheme.primary),
+                    backgroundColor: theme.colorScheme.primary.withValues(
+                      alpha: 0.1,
+                    ),
+                    child: Icon(
+                      Icons.history,
+                      color: theme.colorScheme.primary,
+                    ),
                   ),
-                  title: Text(actions[idx], style: const TextStyle(fontWeight: FontWeight.bold)),
+                  title: Text(
+                    actions[idx],
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
                   subtitle: Text(details[idx]),
                   trailing: Text('Just Now', style: theme.textTheme.bodySmall),
                 );
@@ -303,14 +348,23 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           SizedBox(height: 16),
           Text(
             'App Settings Placeholder',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.grey),
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey,
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildStatCard(String label, String value, IconData icon, [Color? iconColor]) {
+  Widget _buildStatCard(
+    String label,
+    String value,
+    IconData icon, [
+    Color? iconColor,
+  ]) {
     final theme = Theme.of(context);
     return Card(
       child: Padding(
@@ -323,7 +377,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 color: theme.colorScheme.primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(icon, color: iconColor ?? theme.colorScheme.primary, size: 28),
+              child: Icon(
+                icon,
+                color: iconColor ?? theme.colorScheme.primary,
+                size: 28,
+              ),
             ),
             const SizedBox(width: 16),
             Expanded(

@@ -2,6 +2,7 @@ import pytest
 from httpx import AsyncClient
 from fastapi import status
 
+
 @pytest.mark.asyncio
 async def test_not_found_error_handler(client: AsyncClient):
     """Verify that requesting an unregistered path yields standard 404 response shape."""

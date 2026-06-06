@@ -8,7 +8,7 @@ import 'package:ags_gold/features/dashboard/presentation/dashboard_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authNotifierProvider);
-  
+
   // Use a ValueNotifier to notify GoRouter when authentication status changes
   final listenable = ValueNotifier<AsyncValue<AuthStatus>>(authState);
 
@@ -26,7 +26,7 @@ final routerProvider = Provider<GoRouter>((ref) {
     redirect: (context, state) {
       final authValue = ref.read(authNotifierProvider);
       final status = authValue.value ?? AuthStatus.initial;
-      
+
       final isLoggingIn = state.matchedLocation == '/login';
       final isSplash = state.matchedLocation == '/';
 
@@ -47,14 +47,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       return null;
     },
     routes: [
-      GoRoute(
-        path: '/',
-        builder: (context, state) => const SplashScreen(),
-      ),
-      GoRoute(
-        path: '/login',
-        builder: (context, state) => const LoginScreen(),
-      ),
+      GoRoute(path: '/', builder: (context, state) => const SplashScreen()),
+      GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
       GoRoute(
         path: '/dashboard',
         builder: (context, state) => const DashboardScreen(),
