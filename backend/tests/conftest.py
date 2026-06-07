@@ -33,10 +33,9 @@ _load_env_file()
 # 1. Import settings and override DATABASE_URL to test database BEFORE importing app modules
 from app.core.config import settings  # noqa: E402
 
-db_url = settings.DATABASE_URL
-parsed = urlparse(db_url)
-admin_db_url = urlunparse(parsed._replace(path="/postgres"))
-test_db_url = urlunparse(parsed._replace(path="/ags_gold_test_db"))
+# Reconstruct database URLs to respect individual settings overrides (e.g., POSTGRES_PORT in CI/CD)
+test_db_url = f"postgresql+asyncpg://{settings.POSTGRES_USER}:{settings.POSTGRES_PASSWORD}@{settings.POSTGRES_SERVER}:{settings.POSTGRES_PORT}/ags_gold_test_db"
+admin_db_url = f"postgresql+asyncpg://{settings.POSTGRES_USER}:{settings.POSTGRES_PASSWORD}@{settings.POSTGRES_SERVER}:{settings.POSTGRES_PORT}/postgres"
 settings.DATABASE_URL = test_db_url
 
 # 2. Now import app modules

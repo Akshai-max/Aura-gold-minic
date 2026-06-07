@@ -18,6 +18,7 @@ env:
   POSTGRES_USER: postgres
   POSTGRES_PASSWORD: password123
   POSTGRES_DB: ags_gold_test_db
+  DATABASE_URL: postgresql+asyncpg://postgres:password123@localhost:5432/ags_gold_test_db
   PYTHONPATH: backend
 
 jobs:
