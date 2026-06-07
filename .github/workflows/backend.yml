@@ -48,7 +48,7 @@ jobs:
     needs: lint
     services:
       postgres:
-        image: postgres:15-alpine
+        image: public.ecr.aws/docker/library/postgres:15-alpine
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: password123
@@ -87,7 +87,7 @@ jobs:
     needs: lint
     services:
       postgres:
-        image: postgres:15-alpine
+        image: public.ecr.aws/docker/library/postgres:15-alpine
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: password123
@@ -126,7 +126,7 @@ jobs:
     needs: lint
     services:
       postgres:
-        image: postgres:15-alpine
+        image: public.ecr.aws/docker/library/postgres:15-alpine
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: password123
@@ -165,7 +165,7 @@ jobs:
     needs: [integration-tests, security-tests]
     services:
       postgres:
-        image: postgres:15-alpine
+        image: public.ecr.aws/docker/library/postgres:15-alpine
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: password123
@@ -204,7 +204,7 @@ jobs:
     needs: [unit-tests, integration-tests, security-tests, e2e-tests]
     services:
       postgres:
-        image: postgres:15-alpine
+        image: public.ecr.aws/docker/library/postgres:15-alpine
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: password123
