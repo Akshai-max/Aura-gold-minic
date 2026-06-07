@@ -1,7 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:dio/dio.dart';
 import 'package:ags_gold/services/service_providers.dart';
 import 'package:ags_gold/services/api_client.dart';
 import '../mocks/mock_services.dart';

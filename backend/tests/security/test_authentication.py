@@ -1,12 +1,8 @@
-import uuid
-
 import pytest
 from httpx import AsyncClient
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.security import create_access_token, get_password_hash
-from app.models.role import Role
+from app.core.security import get_password_hash
 from app.models.user import User
 from tests.security.conftest import (
     make_expired_token,

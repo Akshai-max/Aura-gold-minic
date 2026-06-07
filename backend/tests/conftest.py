@@ -29,7 +29,7 @@ def _load_env_file():
 _load_env_file()
 
 # 1. Import settings and override DATABASE_URL to test database BEFORE importing app modules
-from app.core.config import settings
+from app.core.config import settings  # noqa: E402
 
 db_url = settings.DATABASE_URL
 parsed = urlparse(db_url)
@@ -38,14 +38,13 @@ test_db_url = urlunparse(parsed._replace(path="/ags_gold_test_db"))
 settings.DATABASE_URL = test_db_url
 
 # 2. Now import app modules
-from app.main import app
-from app.database.session import get_db_session
-from app.database.base import Base
-from app.database.seed import seed_data
-from app.models.user import User
-from app.models.role import Role
-from app.models.permission import Permission
-from app.core.security import create_access_token, get_password_hash
+from app.main import app  # noqa: E402
+from app.database.session import get_db_session  # noqa: E402
+from app.database.base import Base  # noqa: E402
+from app.database.seed import seed_data  # noqa: E402
+from app.models.user import User  # noqa: E402
+from app.models.role import Role  # noqa: E402
+from app.core.security import create_access_token, get_password_hash  # noqa: E402
 
 # Create the test engine with NullPool to avoid event loop mismatch on Windows
 test_engine = create_async_engine(

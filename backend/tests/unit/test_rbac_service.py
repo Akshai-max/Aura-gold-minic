@@ -10,7 +10,7 @@ from app.repositories.role import RoleRepository
 from app.repositories.permission import PermissionRepository
 from app.repositories.user import UserRepository
 from app.services.rbac import RbacService
-from app.schemas.rbac import RoleCreate, RoleUpdate, PermissionCreate
+from app.schemas.rbac import RoleCreate, PermissionCreate
 
 
 @pytest.fixture

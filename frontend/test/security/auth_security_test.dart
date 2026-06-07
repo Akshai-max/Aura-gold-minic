@@ -67,10 +67,7 @@ void main() {
     );
 
     // Simulate interceptor behavior: UnauthorizedException triggers callback
-    final exception = UnauthorizedException('Session expired');
-    if (exception is UnauthorizedException) {
-      client.onUnauthorized?.call();
-    }
+    client.onUnauthorized?.call();
 
     expect(unauthorizedCalled, isTrue);
   });

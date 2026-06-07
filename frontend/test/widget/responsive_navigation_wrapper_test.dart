@@ -7,7 +7,6 @@ import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:ags_gold/core/widgets/shared_drawer.dart';
 import 'package:ags_gold/services/service_providers.dart';
-import 'package:ags_gold/services/api_client.dart';
 import '../mocks/mock_services.dart';
 
 void main() {

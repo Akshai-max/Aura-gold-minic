@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime
 from typing import Optional
 import re
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, field_validator
 
 EMAIL_REGEX = re.compile(r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$")
 

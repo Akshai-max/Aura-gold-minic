@@ -6,7 +6,6 @@ import 'package:mocktail/mocktail.dart';
 import 'package:ags_gold/features/admin/presentation/users_screen.dart';
 import 'package:ags_gold/services/service_providers.dart';
 import '../mocks/mock_services.dart';
-import 'e2e_test_helpers.dart';
 
 void main() {
   late MockApiClient mockApi;

@@ -10,7 +10,6 @@ import 'package:mocktail/mocktail.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ags_gold/main.dart';
 import 'package:ags_gold/services/service_providers.dart';
-import 'package:ags_gold/services/api_client.dart';
 import 'package:ags_gold/features/dashboard/presentation/dashboard_screen.dart';
 import 'package:ags_gold/features/dashboard/presentation/providers/kpi_provider.dart';
 import 'package:ags_gold/features/dashboard/domain/kpi.dart';

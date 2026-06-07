@@ -6,7 +6,6 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.security import create_access_token, get_password_hash
-from app.models.permission import Permission
 from app.models.role import Role
 from app.models.user import User
 from tests.security.conftest import create_user_with_permissions

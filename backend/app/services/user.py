@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime, timezone
-from typing import Any, List, Optional
+from typing import List, Optional
 
 from app.core.exceptions import ForbiddenException, NotFoundException, ValidationException
 from app.core.security import get_password_hash

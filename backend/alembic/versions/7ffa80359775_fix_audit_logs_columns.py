@@ -12,20 +12,6 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-"""fix_audit_logs_columns
-
-Revision ID: 7ffa80359775
-Revises: a123bc456def
-Create Date: 2026-06-07 17:58:24.128775
-
-"""
-from typing import Sequence, Union
-
-from alembic import op
-import sqlalchemy as sa
-from sqlalchemy.dialects import postgresql
-
-# revision identifiers, used by Alembic.
 revision: str = '7ffa80359775'
 down_revision: Union[str, None] = 'a123bc456def'
 branch_labels: Union[str, Sequence[str], None] = None

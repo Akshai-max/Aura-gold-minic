@@ -3,7 +3,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:ags_gold/features/dashboard/presentation/dashboard_screen.dart';
 import 'package:ags_gold/features/auth/presentation/login_screen.dart';
-import 'package:ags_gold/services/api_client.dart';
 import '../mocks/mock_services.dart';
 import 'e2e_test_helpers.dart';
 

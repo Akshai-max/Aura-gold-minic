@@ -1,5 +1,5 @@
 import uuid
-from typing import Any, List, Optional
+from typing import List, Optional
 
 from app.core.exceptions import NotFoundException, ValidationException
 from app.models.role import Role

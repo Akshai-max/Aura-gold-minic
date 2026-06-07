@@ -9,7 +9,6 @@ import 'package:ags_gold/features/admin/presentation/users_screen.dart';
 import 'package:ags_gold/features/admin/presentation/permissions_screen.dart';
 import 'package:ags_gold/features/admin/presentation/roles_screen.dart';
 import 'package:ags_gold/services/service_providers.dart';
-import 'package:ags_gold/services/api_client.dart';
 import '../mocks/mock_services.dart';
 
 Widget buildWithProviders(Widget child, {List<dynamic> overrides = const []}) {

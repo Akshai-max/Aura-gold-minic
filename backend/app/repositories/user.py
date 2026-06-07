@@ -13,7 +13,7 @@ class UserRepository(BaseRepository[User]):
 
     async def get_by_email(self, email: str) -> Optional[User]:
         """Fetch a user record by email, excluding soft-deleted ones."""
-        query = select(User).where(User.email == email, User.is_deleted == False)
+        query = select(User).where(User.email == email, User.is_deleted.is_(False))
         result = await self.db.execute(query)
         return result.scalars().first()
 
@@ -24,7 +24,7 @@ class UserRepository(BaseRepository[User]):
 
         query = (
             select(User)
-            .where(User.id == user_id, User.is_deleted == False)
+            .where(User.id == user_id, User.is_deleted.is_(False))
             .options(selectinload(User.roles).selectinload(Role.permissions))
         )
         result = await self.db.execute(query)
@@ -48,7 +48,7 @@ class UserRepository(BaseRepository[User]):
 
         query = (
             select(User)
-            .where(User.is_deleted == False)
+            .where(User.is_deleted.is_(False))
             .options(selectinload(User.roles).selectinload(Role.permissions))
         )
 

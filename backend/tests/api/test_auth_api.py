@@ -5,7 +5,6 @@ from httpx import AsyncClient
 
 from app.core.security import get_password_hash, create_access_token, create_refresh_token
 from app.models.user import User
-from app.models.token_blacklist import TokenBlacklist
 
 
 @pytest.mark.asyncio
