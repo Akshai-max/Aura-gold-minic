@@ -21,9 +21,7 @@ from app.repositories.audit_log import AuditLogRepository
 from app.services.audit import AuditService
 
 # Setup oauth2 scheme for bearer tokens
-reusable_oauth2 = OAuth2PasswordBearer(
-    tokenUrl=f"{settings.API_V1_STR}/auth/login"
-)
+reusable_oauth2 = OAuth2PasswordBearer(tokenUrl=f"{settings.API_V1_STR}/auth/login")
 
 
 def get_user_repository(

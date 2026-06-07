@@ -19,6 +19,7 @@ from app.services.auth import AuthService
 
 # --- Security Utils Unit Tests ---
 
+
 def test_password_hashing_and_verification():
     """Verify that password hashing generates valid hashes that verify successfully."""
     pwd = "mysecretpassword"
@@ -66,10 +67,15 @@ def test_invalid_token_payload_raises_exception():
     """Verify that tokens missing critical fields raise AuthenticationException."""
     from jose import jwt
     from app.core.config import settings
-    
+
     # Missing 'sub' claim
-    bad_payload = {"exp": datetime.now(timezone.utc) + timedelta(minutes=10), "type": "access"}
-    bad_token = jwt.encode(bad_payload, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
+    bad_payload = {
+        "exp": datetime.now(timezone.utc) + timedelta(minutes=10),
+        "type": "access",
+    }
+    bad_token = jwt.encode(
+        bad_payload, settings.SECRET_KEY, algorithm=settings.ALGORITHM
+    )
 
     with pytest.raises(AuthenticationException) as exc_info:
         decode_token(bad_token)
@@ -77,6 +83,7 @@ def test_invalid_token_payload_raises_exception():
 
 
 # --- AuthService Unit Tests ---
+
 
 @pytest.fixture
 def mock_user_repository():

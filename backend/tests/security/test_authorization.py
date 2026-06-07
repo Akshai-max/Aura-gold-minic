@@ -55,9 +55,7 @@ async def test_endpoint_access_by_role_permissions(
 @pytest.mark.asyncio
 async def test_superuser_endpoint_bypass(db_client: AsyncClient, test_db: AsyncSession):
     """Verify that a superuser has full access to create users without needing specific role permissions."""
-    role_result = await test_db.execute(
-        select(Role).where(Role.name == "super_admin")
-    )
+    role_result = await test_db.execute(select(Role).where(Role.name == "super_admin"))
     admin_role = role_result.scalars().first()
 
     admin_user = User(
@@ -95,7 +93,9 @@ async def test_unauthenticated_request_rejected(db_client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_unauthorized_access_audit_logs(db_client: AsyncClient, test_db: AsyncSession):
+async def test_unauthorized_access_audit_logs(
+    db_client: AsyncClient, test_db: AsyncSession
+):
     _, headers = await create_user_with_permissions(test_db, ["user.view"])
 
     response = await db_client.get("/api/v1/audit-logs/", headers=headers)
@@ -104,7 +104,9 @@ async def test_unauthorized_access_audit_logs(db_client: AsyncClient, test_db: A
 
 
 @pytest.mark.asyncio
-async def test_unauthorized_access_create_role(db_client: AsyncClient, test_db: AsyncSession):
+async def test_unauthorized_access_create_role(
+    db_client: AsyncClient, test_db: AsyncSession
+):
     _, headers = await create_user_with_permissions(test_db, ["user.view"])
 
     response = await db_client.post(
@@ -190,9 +192,7 @@ async def test_role_manipulation_by_readonly_admin_forbidden(
     test_db.add(user)
     await test_db.flush()
 
-    headers = {
-        "Authorization": f"Bearer {create_access_token(subject=str(user.id))}"
-    }
+    headers = {"Authorization": f"Bearer {create_access_token(subject=str(user.id))}"}
 
     super_admin_result = await test_db.execute(
         select(Role).where(Role.name == "super_admin")
@@ -248,9 +248,7 @@ async def test_superuser_bypass_without_explicit_permissions(
     test_db.add(user)
     await test_db.flush()
 
-    headers = {
-        "Authorization": f"Bearer {create_access_token(subject=str(user.id))}"
-    }
+    headers = {"Authorization": f"Bearer {create_access_token(subject=str(user.id))}"}
 
     response = await db_client.post(
         "/api/v1/users/",

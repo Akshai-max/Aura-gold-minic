@@ -9,5 +9,9 @@ class TokenBlacklist(Base, UUIDPrimaryKeyMixin, TimestampMixin):
 
     __tablename__ = "token_blacklist"
 
-    jti: Mapped[str] = mapped_column(String(255), nullable=False, unique=True, index=True)
-    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, index=True)
+    jti: Mapped[str] = mapped_column(
+        String(255), nullable=False, unique=True, index=True
+    )
+    expires_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, index=True
+    )

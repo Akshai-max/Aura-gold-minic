@@ -25,7 +25,7 @@ async def decorator_route(current_user: User = Depends(get_current_user)):
 
 @rbac_test_router.get("/dependency")
 async def dependency_route(
-    current_user: User = Depends(PermissionChecker("user:create"))
+    current_user: User = Depends(PermissionChecker("user:create")),
 ):
     return {"message": "success"}
 
@@ -68,7 +68,9 @@ async def test_require_permission_decorator_allowed(client: AsyncClient, db_sess
                 class MockScalars:
                     def first(self):
                         return mock_user
+
                 return MockScalars()
+
         return MockResult()
 
     db_session.execute = mock_execute
@@ -113,7 +115,9 @@ async def test_require_permission_decorator_forbidden(client: AsyncClient, db_se
                 class MockScalars:
                     def first(self):
                         return mock_user
+
                 return MockScalars()
+
         return MockResult()
 
     db_session.execute = mock_execute
@@ -162,7 +166,9 @@ async def test_permission_checker_dependency_allowed(client: AsyncClient, db_ses
                 class MockScalars:
                     def first(self):
                         return mock_user
+
                 return MockScalars()
+
         return MockResult()
 
     db_session.execute = mock_execute
@@ -206,7 +212,9 @@ async def test_superuser_bypass(client: AsyncClient, db_session):
                 class MockScalars:
                     def first(self):
                         return mock_user
+
                 return MockScalars()
+
         return MockResult()
 
     db_session.execute = mock_execute
@@ -246,20 +254,32 @@ async def test_list_roles_api_allowed(client: AsyncClient, db_session):
     )
 
     # Eager mock return for rbac get_list
-    mock_roles_list = [Role(id=uuid.uuid4(), name="user", created_at=datetime.now(timezone.utc), updated_at=datetime.now(timezone.utc))]
+    mock_roles_list = [
+        Role(
+            id=uuid.uuid4(),
+            name="user",
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc),
+        )
+    ]
 
     call_count = 0
+
     async def mock_execute(*args, **kwargs):
         nonlocal call_count
         call_count += 1
+
         class MockResult:
             def scalars(self):
                 class MockScalars:
                     def first(self):
                         return mock_user
+
                     def all(self):
                         return mock_roles_list
+
                 return MockScalars()
+
         return MockResult()
 
     db_session.execute = mock_execute
@@ -308,7 +328,9 @@ async def test_wildcard_permission_allowed(client: AsyncClient, db_session):
                 class MockScalars:
                     def first(self):
                         return mock_user
+
                 return MockScalars()
+
         return MockResult()
 
     db_session.execute = mock_execute
@@ -330,15 +352,17 @@ async def test_wildcard_permission_allowed(client: AsyncClient, db_session):
 
 def test_decorator_mismatch_raises_runtime_error():
     """Verify that using @require_permission on a function without current_user raises RuntimeError."""
-    
+
     # Decorating a function that doesn't accept current_user should raise RuntimeError when called
     @require_permission("user:view")
     async def bad_route():
         return {"message": "failure"}
 
     import pytest
+
     with pytest.raises(RuntimeError) as exc_info:
         import asyncio
+
         asyncio.run(bad_route())
 
     assert "must declare a 'current_user: User' parameter" in str(exc_info.value)

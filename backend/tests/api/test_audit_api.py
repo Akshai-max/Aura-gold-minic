@@ -35,7 +35,9 @@ def make_mock_result(val, is_list=False):
 def test_permissions():
     now = datetime.now(timezone.utc)
     return {
-        "view_audit": Permission(id=uuid.uuid4(), name="audit.view", created_at=now, updated_at=now),
+        "view_audit": Permission(
+            id=uuid.uuid4(), name="audit.view", created_at=now, updated_at=now
+        ),
     }
 
 
@@ -81,7 +83,9 @@ def unauthorized_user():
 
 
 @pytest.mark.asyncio
-async def test_list_audit_logs_api_allowed(client: AsyncClient, db_session, authorized_user):
+async def test_list_audit_logs_api_allowed(
+    client: AsyncClient, db_session, authorized_user
+):
     """Verify that user with 'audit.view' permission can retrieve audit logs."""
     access_token = create_access_token(subject=authorized_user.id)
 
@@ -126,7 +130,9 @@ async def test_list_audit_logs_api_allowed(client: AsyncClient, db_session, auth
 
 
 @pytest.mark.asyncio
-async def test_list_audit_logs_api_forbidden(client: AsyncClient, db_session, unauthorized_user):
+async def test_list_audit_logs_api_forbidden(
+    client: AsyncClient, db_session, unauthorized_user
+):
     """Verify that user without 'audit.view' permission is denied access (403)."""
     access_token = create_access_token(subject=unauthorized_user.id)
 

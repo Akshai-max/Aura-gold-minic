@@ -38,9 +38,13 @@ async def create_user(
 async def list_users(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=100),
-    search: Optional[str] = Query(None, description="Search term matching first_name, last_name, or email"),
+    search: Optional[str] = Query(
+        None, description="Search term matching first_name, last_name, or email"
+    ),
     is_active: Optional[bool] = Query(None, description="Filter by active status"),
-    is_superuser: Optional[bool] = Query(None, description="Filter by superuser status"),
+    is_superuser: Optional[bool] = Query(
+        None, description="Filter by superuser status"
+    ),
     role_id: Optional[uuid.UUID] = Query(None, description="Filter by mapped role ID"),
     user_service: UserService = Depends(get_user_service),
     current_user: User = Depends(get_current_user),
@@ -86,7 +90,9 @@ async def update_user(
     current_user: User = Depends(get_current_user),
 ) -> UserDetailResponse:
     """Update user attributes. Requires 'user.update' permission."""
-    return await user_service.update_user(id, user_in, performing_user_id=current_user.id)
+    return await user_service.update_user(
+        id, user_in, performing_user_id=current_user.id
+    )
 
 
 @router.delete(

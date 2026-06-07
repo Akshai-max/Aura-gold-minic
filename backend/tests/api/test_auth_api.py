@@ -3,7 +3,11 @@ import uuid
 from datetime import datetime, timezone
 from httpx import AsyncClient
 
-from app.core.security import get_password_hash, create_access_token, create_refresh_token
+from app.core.security import (
+    get_password_hash,
+    create_access_token,
+    create_refresh_token,
+)
 from app.models.user import User
 
 
@@ -26,7 +30,9 @@ async def test_login_success(client: AsyncClient, db_session):
                 class MockScalars:
                     def first(self):
                         return mock_user
+
                 return MockScalars()
+
         return MockResult()
 
     db_session.execute = mock_execute
@@ -46,13 +52,16 @@ async def test_login_success(client: AsyncClient, db_session):
 @pytest.mark.asyncio
 async def test_login_invalid_credentials(client: AsyncClient, db_session):
     """Verify that invalid credentials yield a 401 unauthorized status."""
+
     async def mock_execute(*args, **kwargs):
         class MockResult:
             def scalars(self):
                 class MockScalars:
                     def first(self):
                         return None
+
                 return MockScalars()
+
         return MockResult()
 
     db_session.execute = mock_execute
@@ -86,9 +95,11 @@ async def test_refresh_token_success(client: AsyncClient, db_session):
     # 1st call (checking if token is blacklisted): None
     # 2nd call (getting user by ID): mock_user
     call_count = 0
+
     async def mock_execute(*args, **kwargs):
         nonlocal call_count
         call_count += 1
+
         class MockResult:
             def scalars(self):
                 class MockScalars:
@@ -96,7 +107,9 @@ async def test_refresh_token_success(client: AsyncClient, db_session):
                         if call_count == 1:
                             return None  # Not blacklisted
                         return mock_user  # Found user
+
                 return MockScalars()
+
         return MockResult()
 
     async def mock_get(model, id):
@@ -132,7 +145,9 @@ async def test_logout_success(client: AsyncClient, db_session):
                 class MockScalars:
                     def first(self):
                         return None
+
                 return MockScalars()
+
         return MockResult()
 
     db_session.execute = mock_execute
@@ -172,7 +187,9 @@ async def test_current_user_me(client: AsyncClient, db_session):
                 class MockScalars:
                     def first(self):
                         return mock_user
+
                 return MockScalars()
+
         return MockResult()
 
     db_session.execute = mock_execute

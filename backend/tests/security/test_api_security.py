@@ -71,7 +71,9 @@ async def test_xss_payload_stored_as_literal_json(
 
     from app.core.security import create_access_token
 
-    admin_headers = {"Authorization": f"Bearer {create_access_token(subject=str(admin_user.id))}"}
+    admin_headers = {
+        "Authorization": f"Bearer {create_access_token(subject=str(admin_user.id))}"
+    }
 
     create_res = await db_client.post(
         "/api/v1/users/",
@@ -103,9 +105,7 @@ async def test_rate_limiting_blocks_excessive_login_attempts(
 
     responses = []
     for _ in range(5):
-        responses.append(
-            await db_client.post("/api/v1/auth/login", json=login_body)
-        )
+        responses.append(await db_client.post("/api/v1/auth/login", json=login_body))
 
     status_codes = [r.status_code for r in responses]
     assert 429 in status_codes

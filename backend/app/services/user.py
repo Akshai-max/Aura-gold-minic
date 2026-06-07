@@ -2,7 +2,11 @@ import uuid
 from datetime import datetime, timezone
 from typing import List, Optional
 
-from app.core.exceptions import ForbiddenException, NotFoundException, ValidationException
+from app.core.exceptions import (
+    ForbiddenException,
+    NotFoundException,
+    ValidationException,
+)
 from app.core.security import get_password_hash
 from app.models.user import User
 from app.repositories.user import UserRepository
@@ -102,7 +106,9 @@ class UserService:
         if not user:
             raise NotFoundException("User not found")
 
-        update_data = user_in.model_dump(exclude_unset=True, exclude={"roles", "password"})
+        update_data = user_in.model_dump(
+            exclude_unset=True, exclude={"roles", "password"}
+        )
 
         performing_user = None
         if performing_user_id:
@@ -112,9 +118,7 @@ class UserService:
 
         if performing_user and not performing_user.is_superuser:
             if "is_superuser" in update_data:
-                raise ForbiddenException(
-                    "Only superusers may modify superuser status"
-                )
+                raise ForbiddenException("Only superusers may modify superuser status")
             if user_in.roles is not None:
                 raise ForbiddenException("Only superusers may modify user roles")
 

@@ -14,7 +14,9 @@ pytestmark = pytest.mark.security
 
 
 @pytest.mark.asyncio
-async def test_invalid_login_wrong_password(db_client: AsyncClient, test_db: AsyncSession):
+async def test_invalid_login_wrong_password(
+    db_client: AsyncClient, test_db: AsyncSession
+):
     user = User(
         email="auth_wrong_pw@example.com",
         hashed_password=get_password_hash("correctpassword"),
@@ -49,7 +51,9 @@ async def test_invalid_login_unknown_email(db_client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_invalid_login_inactive_user(db_client: AsyncClient, test_db: AsyncSession):
+async def test_invalid_login_inactive_user(
+    db_client: AsyncClient, test_db: AsyncSession
+):
     user = User(
         email="inactive_auth@example.com",
         hashed_password=get_password_hash("password123"),

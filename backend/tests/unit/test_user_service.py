@@ -28,7 +28,9 @@ def user_service(mock_user_repository, mock_role_repository):
 
 
 @pytest.mark.asyncio
-async def test_create_user_success(user_service, mock_user_repository, mock_role_repository):
+async def test_create_user_success(
+    user_service, mock_user_repository, mock_role_repository
+):
     """Verify that a user is successfully created with hashed password and associated roles."""
     role_id = uuid.uuid4()
     user_in = UserCreate(
@@ -82,7 +84,9 @@ async def test_create_user_success(user_service, mock_user_repository, mock_role
 
 
 @pytest.mark.asyncio
-async def test_create_user_duplicate_email_raises_exception(user_service, mock_user_repository):
+async def test_create_user_duplicate_email_raises_exception(
+    user_service, mock_user_repository
+):
     """Verify that creating a user with a duplicate email raises ValidationException."""
     user_in = UserCreate(
         email="existing@example.com",
@@ -115,7 +119,9 @@ async def test_create_user_invalid_role_raises_exception(
 
     mock_user_repository.get_by_email = AsyncMock(return_value=None)
     mock_role_repository.get_by_ids = AsyncMock(return_value=[])
-    mock_user_repository.create = AsyncMock(return_value=User(email="test@example.com", roles=[]))
+    mock_user_repository.create = AsyncMock(
+        return_value=User(email="test@example.com", roles=[])
+    )
 
     with pytest.raises(NotFoundException) as exc_info:
         await user_service.create_user(user_in)
@@ -129,7 +135,9 @@ async def test_get_user_by_id_success(user_service, mock_user_repository):
     """Verify that an existing user is returned by ID."""
     user_id = uuid.uuid4()
     mock_user = User(id=user_id, email="test@example.com")
-    mock_user_repository.get_with_roles_and_permissions = AsyncMock(return_value=mock_user)
+    mock_user_repository.get_with_roles_and_permissions = AsyncMock(
+        return_value=mock_user
+    )
 
     result = await user_service.get_user_by_id(user_id)
 
@@ -177,7 +185,9 @@ async def test_list_users(user_service, mock_user_repository):
 
 
 @pytest.mark.asyncio
-async def test_update_user_success(user_service, mock_user_repository, mock_role_repository):
+async def test_update_user_success(
+    user_service, mock_user_repository, mock_role_repository
+):
     """Verify that updating a user successfully applies updates, including roles and password hashing."""
     user_id = uuid.uuid4()
     old_role = Role(id=uuid.uuid4(), name="User")
@@ -220,7 +230,9 @@ async def test_update_user_success(user_service, mock_user_repository, mock_role
 
 
 @pytest.mark.asyncio
-async def test_update_user_duplicate_email_raises_exception(user_service, mock_user_repository):
+async def test_update_user_duplicate_email_raises_exception(
+    user_service, mock_user_repository
+):
     """Verify that updating user to another user's registered email raises ValidationException."""
     user_id = uuid.uuid4()
     user = User(id=user_id, email="user@example.com")

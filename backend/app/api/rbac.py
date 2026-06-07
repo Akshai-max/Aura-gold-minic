@@ -149,7 +149,9 @@ async def assign_role_to_user(
     current_user: User = Depends(get_current_user),
 ) -> UserRolesResponse:
     """Map a role to a user. Requires 'role:write' permission."""
-    return await rbac_service.assign_role_to_user(user_id, role_id, performing_user_id=current_user.id)
+    return await rbac_service.assign_role_to_user(
+        user_id, role_id, performing_user_id=current_user.id
+    )
 
 
 @router.delete(
@@ -166,7 +168,9 @@ async def remove_role_from_user(
     current_user: User = Depends(get_current_user),
 ) -> UserRolesResponse:
     """Remove a role mapping from a user. Requires 'role:write' permission."""
-    return await rbac_service.remove_role_from_user(user_id, role_id, performing_user_id=current_user.id)
+    return await rbac_service.remove_role_from_user(
+        user_id, role_id, performing_user_id=current_user.id
+    )
 
 
 @router.post(
@@ -183,7 +187,9 @@ async def assign_permission_to_role(
     current_user: User = Depends(get_current_user),
 ) -> RoleResponse:
     """Map a permission scope to a role. Requires 'role:write' permission."""
-    return await rbac_service.assign_permission_to_role(role_id, permission_id, performing_user_id=current_user.id)
+    return await rbac_service.assign_permission_to_role(
+        role_id, permission_id, performing_user_id=current_user.id
+    )
 
 
 @router.delete(
@@ -200,4 +206,6 @@ async def remove_permission_from_role(
     current_user: User = Depends(get_current_user),
 ) -> RoleResponse:
     """Remove a permission mapping from a role. Requires 'role:write' permission."""
-    return await rbac_service.remove_permission_from_role(role_id, permission_id, performing_user_id=current_user.id)
+    return await rbac_service.remove_permission_from_role(
+        role_id, permission_id, performing_user_id=current_user.id
+    )

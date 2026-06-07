@@ -74,9 +74,7 @@ class RbacService:
         """Create a new permission, enforcing name uniqueness."""
         existing = await self.permission_repo.get_by_name(perm_in.name)
         if existing:
-            raise ValidationException(
-                f"Permission '{perm_in.name}' already exists"
-            )
+            raise ValidationException(f"Permission '{perm_in.name}' already exists")
         return await self.permission_repo.create(perm_in.model_dump())
 
     async def list_permissions(

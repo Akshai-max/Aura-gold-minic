@@ -62,7 +62,9 @@ if settings.ENVIRONMENT == "development":
         cors_origins = ["*"]
 
 if cors_origins or allow_origin_regex:
-    origins_list = [str(origin).strip("/") for origin in cors_origins] if cors_origins else []
+    origins_list = (
+        [str(origin).strip("/") for origin in cors_origins] if cors_origins else []
+    )
     # Starlette requires allow_origins to not contain "*" when allow_origin_regex is used with credentials
     if allow_origin_regex and "*" in origins_list:
         origins_list.remove("*")
@@ -91,5 +93,6 @@ app.include_router(health_router)
 app.include_router(auth_router, prefix=f"{settings.API_V1_STR}/auth", tags=["auth"])
 app.include_router(rbac_router, prefix=f"{settings.API_V1_STR}/rbac", tags=["rbac"])
 app.include_router(user_router, prefix=f"{settings.API_V1_STR}/users", tags=["users"])
-app.include_router(audit_router, prefix=f"{settings.API_V1_STR}/audit-logs", tags=["audit-logs"])
-
+app.include_router(
+    audit_router, prefix=f"{settings.API_V1_STR}/audit-logs", tags=["audit-logs"]
+)

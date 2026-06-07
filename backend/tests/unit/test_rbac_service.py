@@ -54,7 +54,9 @@ async def test_create_role_success(rbac_service, mock_role_repository):
 
 
 @pytest.mark.asyncio
-async def test_create_role_duplicate_raises_exception(rbac_service, mock_role_repository):
+async def test_create_role_duplicate_raises_exception(
+    rbac_service, mock_role_repository
+):
     """Verify that creating a role with a duplicate name raises ValidationException."""
     role_in = RoleCreate(name="admin", description="Admin role")
     mock_role_repository.get_by_name = AsyncMock(return_value=Role(name="admin"))
@@ -87,9 +89,7 @@ async def test_assign_role_to_user(
     updated_user = await rbac_service.assign_role_to_user(user_id, role_id)
 
     assert mock_role in updated_user.roles
-    mock_user_repository.get_with_roles_and_permissions.assert_called_once_with(
-        user_id
-    )
+    mock_user_repository.get_with_roles_and_permissions.assert_called_once_with(user_id)
     mock_role_repository.get.assert_called_once_with(role_id)
 
 
@@ -110,9 +110,7 @@ async def test_assign_permission_to_role(
     mock_role_repository.db.commit = AsyncMock()
     mock_role_repository.db.refresh = AsyncMock()
 
-    updated_role = await rbac_service.assign_permission_to_role(
-        role_id, permission_id
-    )
+    updated_role = await rbac_service.assign_permission_to_role(role_id, permission_id)
 
     assert mock_permission in updated_role.permissions
     mock_role_repository.get_with_permissions.assert_called_once_with(role_id)
@@ -190,4 +188,3 @@ async def test_list_permissions(rbac_service, mock_permission_repository):
     result = await rbac_service.list_permissions(skip=5, limit=15)
     assert result == mock_perms
     mock_permission_repository.list.assert_called_once_with(skip=5, limit=15)
-

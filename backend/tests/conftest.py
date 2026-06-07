@@ -11,6 +11,7 @@ from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 from sqlalchemy.pool import NullPool
 
+
 # Load environment variables from .env file
 def _load_env_file():
     """Load variables from .env file into os.environ if .env exists."""
@@ -22,9 +23,10 @@ def _load_env_file():
                 if line and not line.startswith("#") and "=" in line:
                     key, value = line.split("=", 1)
                     key = key.strip()
-                    value = value.strip().strip('"\'')
+                    value = value.strip().strip("\"'")
                     if key not in os.environ:
                         os.environ[key] = value
+
 
 _load_env_file()
 

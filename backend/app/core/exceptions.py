@@ -52,9 +52,7 @@ class ValidationException(AppException):
 class RateLimitException(AppException):
     """Exception raised when a client exceeds rate limits."""
 
-    def __init__(
-        self, message: str = "Too many requests. Please try again later."
-    ):
+    def __init__(self, message: str = "Too many requests. Please try again later."):
         super().__init__(message, status_code=status.HTTP_429_TOO_MANY_REQUESTS)
 
 

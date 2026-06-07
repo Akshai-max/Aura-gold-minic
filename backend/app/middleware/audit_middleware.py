@@ -4,8 +4,12 @@ from fastapi import Request
 from starlette.middleware.base import BaseHTTPMiddleware
 
 # Context variables to hold request client metadata within async execution chains
-client_ip_ctx: contextvars.ContextVar[Optional[str]] = contextvars.ContextVar("client_ip", default=None)
-user_agent_ctx: contextvars.ContextVar[Optional[str]] = contextvars.ContextVar("user_agent", default=None)
+client_ip_ctx: contextvars.ContextVar[Optional[str]] = contextvars.ContextVar(
+    "client_ip", default=None
+)
+user_agent_ctx: contextvars.ContextVar[Optional[str]] = contextvars.ContextVar(
+    "user_agent", default=None
+)
 
 
 class AuditRequestContextMiddleware(BaseHTTPMiddleware):

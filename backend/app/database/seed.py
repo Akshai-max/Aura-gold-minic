@@ -91,7 +91,14 @@ async def seed_data(session: AsyncSession) -> None:
             super_admin_role.permissions.append(perm)
 
     admin_role = db_roles["admin"]
-    for perm_name in ["user.view", "role:read", "audit.view", "user:read", "role:read", "audit_log:read"]:
+    for perm_name in [
+        "user.view",
+        "role:read",
+        "audit.view",
+        "user:read",
+        "role:read",
+        "audit_log:read",
+    ]:
         perm = db_permissions[perm_name]
         if perm not in admin_role.permissions:
             admin_role.permissions.append(perm)

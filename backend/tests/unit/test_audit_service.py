@@ -28,7 +28,9 @@ async def test_log_action_resolves_context_meta(audit_service, mock_audit_reposi
     token_ua = user_agent_ctx.set("Safari")
 
     try:
-        mock_audit_repository.create = AsyncMock(return_value=AuditLog(action="test_action"))
+        mock_audit_repository.create = AsyncMock(
+            return_value=AuditLog(action="test_action")
+        )
 
         result = await audit_service.log_action(
             user_id=user_id,

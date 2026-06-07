@@ -66,6 +66,7 @@ def require_permission(permission_name: str) -> Callable:
             if not current_user:
                 # Developer mismatch warning
                 import inspect
+
                 sig = inspect.signature(func)
                 if "current_user" not in sig.parameters:
                     raise RuntimeError(

@@ -48,4 +48,3 @@ class RoleRepository(BaseRepository[Role]):
         )
         result = await self.db.execute(query)
         return list(result.scalars().all())
-

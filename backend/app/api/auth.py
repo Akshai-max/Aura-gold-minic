@@ -22,9 +22,7 @@ async def login(
     auth_service: AuthService = Depends(get_auth_service),
 ) -> Token:
     """Authenticate a user using email and password, returning JWT access and refresh tokens."""
-    user = await auth_service.authenticate_user(
-        login_data.email, login_data.password
-    )
+    user = await auth_service.authenticate_user(login_data.email, login_data.password)
 
     # Generate a unique ID for the refresh token
     jti = str(uuid.uuid4())

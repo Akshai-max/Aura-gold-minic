@@ -34,10 +34,18 @@ def make_mock_result(val, is_list=False):
 def test_permissions():
     now = datetime.now(timezone.utc)
     return {
-        "view": Permission(id=uuid.uuid4(), name="user.view", created_at=now, updated_at=now),
-        "create": Permission(id=uuid.uuid4(), name="user.create", created_at=now, updated_at=now),
-        "update": Permission(id=uuid.uuid4(), name="user.update", created_at=now, updated_at=now),
-        "delete": Permission(id=uuid.uuid4(), name="user.delete", created_at=now, updated_at=now),
+        "view": Permission(
+            id=uuid.uuid4(), name="user.view", created_at=now, updated_at=now
+        ),
+        "create": Permission(
+            id=uuid.uuid4(), name="user.create", created_at=now, updated_at=now
+        ),
+        "update": Permission(
+            id=uuid.uuid4(), name="user.update", created_at=now, updated_at=now
+        ),
+        "delete": Permission(
+            id=uuid.uuid4(), name="user.delete", created_at=now, updated_at=now
+        ),
     }
 
 
@@ -90,7 +98,9 @@ def unauthorized_user():
 
 
 @pytest.mark.asyncio
-async def test_create_user_api_success(client: AsyncClient, db_session, authorized_user):
+async def test_create_user_api_success(
+    client: AsyncClient, db_session, authorized_user
+):
     """Verify that authorized users can create a new user via API."""
     access_token = create_access_token(subject=authorized_user.id)
 
@@ -169,7 +179,9 @@ async def test_create_user_api_success(client: AsyncClient, db_session, authoriz
 
 
 @pytest.mark.asyncio
-async def test_create_user_api_forbidden(client: AsyncClient, db_session, unauthorized_user):
+async def test_create_user_api_forbidden(
+    client: AsyncClient, db_session, unauthorized_user
+):
     """Verify that unauthorized users are blocked from creating a user."""
     access_token = create_access_token(subject=unauthorized_user.id)
 
@@ -190,7 +202,10 @@ async def test_create_user_api_forbidden(client: AsyncClient, db_session, unauth
     )
 
     assert response.status_code == 403
-    assert "permission 'user.create' is required" in response.json()["error"]["message"].lower()
+    assert (
+        "permission 'user.create' is required"
+        in response.json()["error"]["message"].lower()
+    )
 
 
 @pytest.mark.asyncio

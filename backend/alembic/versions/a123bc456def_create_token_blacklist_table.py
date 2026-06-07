@@ -5,6 +5,7 @@ Revises: e6164fefc93b
 Create Date: 2026-06-06 20:45:00.000000
 
 """
+
 from typing import Sequence, Union
 from alembic import op
 import sqlalchemy as sa
@@ -36,9 +37,7 @@ def upgrade() -> None:
         ),
         sa.PrimaryKeyConstraint("id"),
     )
-    op.create_index(
-        "ix_token_blacklist_jti", "token_blacklist", ["jti"], unique=True
-    )
+    op.create_index("ix_token_blacklist_jti", "token_blacklist", ["jti"], unique=True)
     op.create_index(
         "ix_token_blacklist_expires_at", "token_blacklist", ["expires_at"], unique=False
     )
