@@ -25,6 +25,9 @@ def make_mock_result(val, is_list=False):
         def scalars(self):
             return MockScalars()
 
+        def scalar(self):
+            return val
+
         def all(self):
             return val if is_list else [val]
 
@@ -108,11 +111,10 @@ async def test_list_audit_logs_api_allowed(
         nonlocal call_count
         call_count += 1
         if call_count == 1:
-            # get_current_user check
             return make_mock_result(authorized_user)
-        else:
-            # list_audit_logs query result
+        if call_count == 2:
             return make_mock_result(mock_logs, is_list=True)
+        return make_mock_result(1)
 
     db_session.execute = mock_execute
 
@@ -123,10 +125,11 @@ async def test_list_audit_logs_api_allowed(
 
     assert response.status_code == 200
     data = response.json()
-    assert len(data) == 1
-    assert data[0]["action"] == "login_success"
-    assert data[0]["ip_address"] == "127.0.0.1"
-    assert data[0]["metadata"] == {"email": "admin@example.com"}
+    assert data["total"] == 1
+    assert len(data["items"]) == 1
+    assert data["items"][0]["action"] == "login_success"
+    assert data["items"][0]["ip_address"] == "127.0.0.1"
+    assert data["items"][0]["metadata"] == {"email": "admin@example.com"}
 
 
 @pytest.mark.asyncio

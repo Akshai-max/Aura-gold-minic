@@ -6,3 +6,5 @@ from app.models.role import Role  # noqa: F401
 from app.models.permission import Permission  # noqa: F401
 from app.models.audit_log import AuditLog  # noqa: F401
 from app.models.token_blacklist import TokenBlacklist  # noqa: F401
+from app.models.notification import Notification  # noqa: F401
+from app.models.user_settings import UserSettings  # noqa: F401

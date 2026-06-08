@@ -5,20 +5,8 @@ import pytest
 
 pytestmark = pytest.mark.smoke
 
-SMOKE_BASE_URL = os.getenv("SMOKE_BASE_URL", "http://localhost:8000").rstrip("/")
 SMOKE_ADMIN_EMAIL = os.getenv("SMOKE_ADMIN_EMAIL", "superadmin@agsgold.com")
 SMOKE_ADMIN_PASSWORD = os.getenv("SMOKE_ADMIN_PASSWORD", "adminpassword")
-
-
-def _smoke_enabled() -> bool:
-    return os.getenv("RUN_SMOKE_TESTS", "false").lower() in ("1", "true", "yes")
-
-
-@pytest.fixture
-def smoke_client():
-    if not _smoke_enabled():
-        pytest.skip("Set RUN_SMOKE_TESTS=true to run deployment smoke tests")
-    return httpx.Client(base_url=SMOKE_BASE_URL, timeout=15.0)
 
 
 def test_smoke_health_endpoint(smoke_client: httpx.Client):

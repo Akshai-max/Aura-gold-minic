@@ -1,4 +1,5 @@
 from contextlib import asynccontextmanager
+from datetime import datetime, timezone
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -17,8 +18,12 @@ from app.api.auth import router as auth_router
 from app.api.rbac import router as rbac_router
 from app.api.user import router as user_router
 from app.api.audit import router as audit_router
-from app.database.session import verify_db_connection
+from app.api.notification import router as notification_router
+from app.api.profile import router as profile_router
+from app.api.dashboard import router as dashboard_router
+from app.database.session import verify_db_connection, async_session_maker
 from app.database import base as db_base  # noqa: F401
+from app.repositories.token_blacklist import TokenBlacklistRepository
 
 
 @asynccontextmanager
@@ -38,6 +43,19 @@ async def lifespan(app: FastAPI):
             "db_connection_failed",
             message="Could not connect to database on startup. Please verify credentials/server status.",
         )
+
+    if db_connected:
+        try:
+            async with async_session_maker() as session:
+                repo = TokenBlacklistRepository(session)
+                removed = await repo.delete_expired(datetime.now(timezone.utc))
+                if removed:
+                    logger.info(
+                        "token_blacklist_cleanup",
+                        message=f"Removed {removed} expired token blacklist entries.",
+                    )
+        except Exception:
+            logger.warning("token_blacklist_cleanup_failed")
 
     yield
 
@@ -95,4 +113,15 @@ app.include_router(rbac_router, prefix=f"{settings.API_V1_STR}/rbac", tags=["rba
 app.include_router(user_router, prefix=f"{settings.API_V1_STR}/users", tags=["users"])
 app.include_router(
     audit_router, prefix=f"{settings.API_V1_STR}/audit-logs", tags=["audit-logs"]
+)
+app.include_router(
+    notification_router,
+    prefix=f"{settings.API_V1_STR}/notifications",
+    tags=["notifications"],
+)
+app.include_router(
+    profile_router, prefix=f"{settings.API_V1_STR}/profile", tags=["profile"]
+)
+app.include_router(
+    dashboard_router, prefix=f"{settings.API_V1_STR}/dashboard", tags=["dashboard"]
 )

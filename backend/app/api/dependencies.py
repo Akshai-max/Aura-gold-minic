@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.exceptions import AuthenticationException
-from app.core.security import decode_token
+from app.core.security import decode_token, validate_token_version
 from app.database.session import get_db_session
 from app.models.user import User
 from app.repositories.user import UserRepository
@@ -18,7 +18,12 @@ from app.services.rbac import RbacService
 from app.services.user import UserService
 
 from app.repositories.audit_log import AuditLogRepository
+from app.repositories.notification import NotificationRepository
+from app.repositories.user_settings import UserSettingsRepository
 from app.services.audit import AuditService
+from app.services.notification import NotificationService
+from app.services.profile import ProfileService
+from app.services.dashboard import DashboardService
 
 # Setup oauth2 scheme for bearer tokens
 reusable_oauth2 = OAuth2PasswordBearer(tokenUrl=f"{settings.API_V1_STR}/auth/login")
@@ -59,11 +64,35 @@ def get_audit_repository(
     return AuditLogRepository(db)
 
 
+def get_notification_repository(
+    db: AsyncSession = Depends(get_db_session),
+) -> NotificationRepository:
+    """Dependency injecting the NotificationRepository."""
+    return NotificationRepository(db)
+
+
+def get_user_settings_repository(
+    db: AsyncSession = Depends(get_db_session),
+) -> UserSettingsRepository:
+    """Dependency injecting the UserSettingsRepository."""
+    return UserSettingsRepository(db)
+
+
+def get_notification_service(
+    notification_repo: NotificationRepository = Depends(get_notification_repository),
+    user_repo: UserRepository = Depends(get_user_repository),
+    settings_repo: UserSettingsRepository = Depends(get_user_settings_repository),
+) -> NotificationService:
+    """Dependency injecting the NotificationService."""
+    return NotificationService(notification_repo, user_repo, settings_repo)
+
+
 def get_audit_service(
     audit_repo: AuditLogRepository = Depends(get_audit_repository),
+    notification_service: NotificationService = Depends(get_notification_service),
 ) -> AuditService:
     """Dependency injecting the AuditService."""
-    return AuditService(audit_repo)
+    return AuditService(audit_repo, notification_service)
 
 
 def get_auth_service(
@@ -92,7 +121,6 @@ async def get_current_user(
     user_repo: UserRepository = Depends(get_user_repository),
 ) -> User:
     """Retrieve the current authenticated user with roles and permissions eager-loaded."""
-    # Decode and validate access token
     payload = decode_token(token)
 
     if payload.get("type") != "access":
@@ -107,10 +135,11 @@ async def get_current_user(
     except ValueError:
         raise AuthenticationException("Invalid user identifier in token")
 
-    # Fetch user with eager loading of roles and nested permissions
     user = await user_repo.get_with_roles_and_permissions(user_id)
     if not user or user.is_deleted or not user.is_active:
         raise AuthenticationException("User account is inactive or not found")
+
+    validate_token_version(payload, user.token_version or 0)
     return user
 
 
@@ -121,3 +150,20 @@ def get_user_service(
 ) -> UserService:
     """Dependency injecting the UserService."""
     return UserService(user_repo, role_repo, audit_service)
+
+
+def get_profile_service(
+    user_repo: UserRepository = Depends(get_user_repository),
+    settings_repo: UserSettingsRepository = Depends(get_user_settings_repository),
+    audit_service: AuditService = Depends(get_audit_service),
+) -> ProfileService:
+    """Dependency injecting the ProfileService."""
+    return ProfileService(user_repo, settings_repo, audit_service)
+
+
+def get_dashboard_service(
+    audit_service: AuditService = Depends(get_audit_service),
+    notification_service: NotificationService = Depends(get_notification_service),
+) -> DashboardService:
+    """Dependency injecting the DashboardService."""
+    return DashboardService(audit_service, notification_service)

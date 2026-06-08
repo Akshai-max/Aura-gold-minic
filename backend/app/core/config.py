@@ -20,6 +20,14 @@ class Settings(BaseSettings):
 
     RATE_LIMIT_LOGIN_MAX: int = 5
     RATE_LIMIT_LOGIN_WINDOW_SECONDS: int = 60
+    RATE_LIMIT_PROFILE_MAX: int = 10
+    RATE_LIMIT_PROFILE_WINDOW_SECONDS: int = 300
+
+    TRUSTED_PROXY: bool = False
+    AVATAR_MAX_BYTES: int = 262_144  # 256 KB
+    DASHBOARD_CACHE_TTL_SECONDS: int = 30
+    NOTIFICATION_LOGIN_COOLDOWN_MINUTES: int = 60
+    AUDIT_EXPORT_MAX_ROWS: int = 5000
 
     # CORS Origins
     BACKEND_CORS_ORIGINS: Union[List[str], str] = []

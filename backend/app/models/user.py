@@ -1,6 +1,6 @@
 from __future__ import annotations
 from typing import List, TYPE_CHECKING
-from sqlalchemy import String, Boolean, Index
+from sqlalchemy import String, Boolean, Index, Text, Integer
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.models.base import Base, UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin
 from app.models.associations import user_roles
@@ -18,6 +18,9 @@ class User(Base, UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin):
     is_superuser: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     first_name: Mapped[str | None] = mapped_column(String(100), nullable=True)
     last_name: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    avatar_base64: Mapped[str | None] = mapped_column(Text, nullable=True)
+    avatar_content_type: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    token_version: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
 
     # Relationships
     roles: Mapped[List["Role"]] = relationship(
