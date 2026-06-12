@@ -8,3 +8,8 @@ from app.models.audit_log import AuditLog  # noqa: F401
 from app.models.token_blacklist import TokenBlacklist  # noqa: F401
 from app.models.notification import Notification  # noqa: F401
 from app.models.user_settings import UserSettings  # noqa: F401
+from app.models.customer import Customer  # noqa: F401
+from app.models.supplier import Supplier  # noqa: F401
+from app.models.inventory_item import InventoryItem  # noqa: F401
+from app.models.stock_movement import StockMovement  # noqa: F401
+from app.models.transaction import Transaction, TransactionLine  # noqa: F401

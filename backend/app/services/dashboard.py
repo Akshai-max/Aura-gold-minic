@@ -7,8 +7,14 @@ from app.core import audit_actions
 from app.core.config import settings
 from app.core.permissions import user_has_permission
 from app.models.user import User
+from app.schemas.dashboard import (
+    InventoryDashboardMetrics,
+    TransactionDashboardMetrics,
+)
 from app.services.audit import AuditService
 from app.services.notification import NotificationService
+from app.services.inventory import InventoryService
+from app.services.transaction import TransactionService
 
 _cache: dict[str, tuple[float, dict[str, Any]]] = {}
 
@@ -20,9 +26,13 @@ class DashboardService:
         self,
         audit_service: AuditService,
         notification_service: NotificationService,
+        inventory_service: Optional[InventoryService] = None,
+        transaction_service: Optional[TransactionService] = None,
     ):
         self.audit_service = audit_service
         self.notification_service = notification_service
+        self.inventory_service = inventory_service
+        self.transaction_service = transaction_service
 
     def _cache_key(self, user_id: uuid.UUID, can_view_all: bool) -> str:
         return f"{user_id}:{can_view_all}"
@@ -63,21 +73,45 @@ class DashboardService:
             user_id=activity_user_id,
         )
 
-        (
-            recent_activity_result,
-            security_alerts_result,
-            unread,
-            notifications_result,
-            login_stats,
-            activity_trend,
-        ) = await asyncio.gather(
+        inventory_metrics_coro = None
+        if self.inventory_service and user_has_permission(current_user, "inventory.view"):
+            inventory_metrics_coro = self.inventory_service.get_metrics(low_stock_limit=5)
+
+        transaction_metrics_coro = None
+        if self.transaction_service and user_has_permission(
+            current_user, "transaction.view"
+        ):
+            transaction_metrics_coro = self.transaction_service.get_metrics()
+
+        coroutines = [
             recent_activity_coro,
             security_alerts_coro,
             unread_coro,
             notifications_coro,
             login_stats_coro,
             activity_trend_coro,
-        )
+        ]
+        if inventory_metrics_coro is not None:
+            coroutines.append(inventory_metrics_coro)
+        if transaction_metrics_coro is not None:
+            coroutines.append(transaction_metrics_coro)
+
+        results = await asyncio.gather(*coroutines)
+
+        recent_activity_result = results[0]
+        security_alerts_result = results[1]
+        unread = results[2]
+        notifications_result = results[3]
+        login_stats = results[4]
+        activity_trend = results[5]
+        next_idx = 6
+        inventory_metrics = None
+        transaction_metrics = None
+        if inventory_metrics_coro is not None:
+            inventory_metrics = results[next_idx]
+            next_idx += 1
+        if transaction_metrics_coro is not None:
+            transaction_metrics = results[next_idx]
 
         recent_activity, _ = recent_activity_result
         security_alerts, _ = security_alerts_result
@@ -91,5 +125,13 @@ class DashboardService:
             "login_statistics": login_stats,
             "activity_trend": activity_trend,
         }
+        if inventory_metrics is not None:
+            stats["inventory_metrics"] = InventoryDashboardMetrics.model_validate(
+                inventory_metrics.model_dump()
+            )
+        if transaction_metrics is not None:
+            stats["transaction_metrics"] = TransactionDashboardMetrics.model_validate(
+                transaction_metrics.model_dump()
+            )
         _cache[cache_key] = (now, stats)
         return stats

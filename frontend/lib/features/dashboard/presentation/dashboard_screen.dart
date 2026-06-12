@@ -415,10 +415,12 @@ class _DashboardOverviewContentState extends ConsumerState<_DashboardOverviewCon
     );
   }
 
-  Widget _buildStatsGrid(bool isDesktop, dynamic dashboardStats) {
+  Widget _buildStatsGrid(bool isDesktop, DashboardStats? dashboardStats) {
     final loginToday = dashboardStats?.loginStatistics.today ?? 0;
     final unread = dashboardStats?.unreadNotifications ?? 0;
     final activityCount = dashboardStats?.recentActivity.length ?? 0;
+    final inventory = dashboardStats?.inventoryMetrics;
+    final transactions = dashboardStats?.transactionMetrics;
 
     final stats = [
       _StatItem('Logins Today', '$loginToday', Icons.login, AppTheme.sapphireBlue,
@@ -428,6 +430,48 @@ class _DashboardOverviewContentState extends ConsumerState<_DashboardOverviewCon
       _StatItem('Recent Events', '$activityCount', Icons.history,
           AppTheme.emerald, 'Activity', true),
     ];
+
+    if (inventory != null) {
+      stats.addAll([
+        _StatItem('Total Stock', '${inventory.totalStock}', Icons.inventory_2,
+            AppTheme.primaryGold, 'Units', true),
+        _StatItem(
+            'Inventory Value',
+            '₹${inventory.inventoryValue.toStringAsFixed(0)}',
+            Icons.account_balance_wallet_outlined,
+            AppTheme.sapphireBlue,
+            'Value',
+            true),
+        _StatItem(
+            'Low Stock',
+            '${inventory.lowStockCount}',
+            Icons.warning_amber_outlined,
+            inventory.lowStockCount > 0 ? Colors.orange : AppTheme.emerald,
+            'Alert',
+            inventory.lowStockCount == 0),
+      ]);
+    }
+
+    if (transactions != null) {
+      stats.addAll([
+        _StatItem(
+          'Daily Revenue',
+          '₹${transactions.dailyRevenue.toStringAsFixed(0)}',
+          Icons.today_outlined,
+          AppTheme.emerald,
+          'Today',
+          true,
+        ),
+        _StatItem(
+          'Monthly Revenue',
+          '₹${transactions.monthlyRevenue.toStringAsFixed(0)}',
+          Icons.calendar_month_outlined,
+          AppTheme.primaryGold,
+          'Month',
+          true,
+        ),
+      ]);
+    }
 
     if (isDesktop) {
       return Row(

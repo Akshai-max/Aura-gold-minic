@@ -17,6 +17,27 @@ class UserRepository(BaseRepository[User]):
         result = await self.db.execute(query)
         return result.scalars().first()
 
+    async def get_user_ids_with_permission(
+        self, permission_name: str
+    ) -> list[Any]:
+        """Return active user IDs granted a specific permission."""
+        from app.models.permission import Permission
+        from app.models.role import Role
+
+        query = (
+            select(User.id)
+            .join(User.roles)
+            .join(Role.permissions)
+            .where(
+                User.is_deleted.is_(False),
+                User.is_active.is_(True),
+                Permission.name == permission_name,
+            )
+            .distinct()
+        )
+        result = await self.db.execute(query)
+        return list(result.scalars().all())
+
     async def get_with_roles_and_permissions(self, user_id: Any) -> Optional[User]:
         """Fetch user with eager loading of roles and nested permissions."""
         from sqlalchemy.orm import selectinload

@@ -81,6 +81,7 @@ class AuditService:
         entity_type: Optional[str] = None,
         entity_id: Optional[str] = None,
         metadata: Optional[dict] = None,
+        commit: bool = True,
     ) -> AuditLog:
         """Log a new audit event, automatically resolving client context."""
         ip_address = client_ip_ctx.get()
@@ -101,7 +102,7 @@ class AuditService:
             "timestamp": datetime.now(timezone.utc),
         }
 
-        audit_log = await self.audit_repo.create(log_data)
+        audit_log = await self.audit_repo.create(log_data, commit=commit)
 
         self._dispatch_notification(
             action=action,

@@ -22,6 +22,8 @@ COPY --from=builder /usr/local /usr/local
 # Copy source files, changing ownership to the unprivileged appuser
 COPY --chown=appuser:appgroup . /app
 
+RUN chmod +x entrypoint.sh
+
 # Ensure PYTHONUNBUFFERED is set
 ENV PYTHONUNBUFFERED=1
 
@@ -30,4 +32,4 @@ USER appuser
 
 EXPOSE 8000
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["sh", "entrypoint.sh"]

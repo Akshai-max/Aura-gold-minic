@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ags_gold/services/service_providers.dart';
 import 'package:ags_gold/core/theme/app_theme.dart';
 import 'package:ags_gold/core/responsive/responsive_layout.dart';
+import 'package:ags_gold/core/navigation/app_nav_destinations.dart';
 import 'package:ags_gold/features/notifications/presentation/notification_drawer.dart';
 
 class ResponsiveNavigationWrapper extends ConsumerWidget {
@@ -15,36 +16,6 @@ class ResponsiveNavigationWrapper extends ConsumerWidget {
     required this.child,
     required this.title,
   });
-
-  int _getSelectedIndex(String path) {
-    if (path.startsWith('/dashboard')) return 0;
-    if (path.startsWith('/profile')) return 1;
-    if (path.startsWith('/audit-logs')) return 2;
-    if (path.startsWith('/admin/users')) return 3;
-    if (path.startsWith('/admin/roles')) return 4;
-    if (path.startsWith('/admin/permissions')) return 5;
-    if (path.startsWith('/settings')) return 6;
-    return 0;
-  }
-
-  void _onItemTapped(BuildContext context, int index) {
-    switch (index) {
-      case 0:
-        context.go('/dashboard');
-      case 1:
-        context.go('/profile');
-      case 2:
-        context.go('/audit-logs');
-      case 3:
-        context.go('/admin/users');
-      case 4:
-        context.go('/admin/roles');
-      case 5:
-        context.go('/admin/permissions');
-      case 6:
-        context.go('/settings');
-    }
-  }
 
   void _handleLogout(BuildContext context, WidgetRef ref) {
     showDialog(
@@ -74,9 +45,11 @@ class ResponsiveNavigationWrapper extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = GoRouterState.of(context);
     final currentPath = state.matchedLocation;
-    final selectedIndex = _getSelectedIndex(currentPath);
     final theme = Theme.of(context);
     final isDesktop = ResponsiveLayout.isDesktop(context);
+    final profile = ref.watch(profileProvider).value;
+    final destinations = buildNavDestinations(profile);
+    final selectedIndex = selectedNavIndexForPath(currentPath, destinations);
 
     if (isDesktop) {
       return Scaffold(
@@ -85,8 +58,9 @@ class ResponsiveNavigationWrapper extends ConsumerWidget {
           children: [
             NavigationRail(
               selectedIndex: selectedIndex,
-              onDestinationSelected: (index) => _onItemTapped(context, index),
-              labelType: NavigationRailLabelType.all,
+              onDestinationSelected: (index) =>
+                  navigateToIndex(context, index, destinations),
+              labelType: NavigationRailLabelType.selected,
               selectedIconTheme: IconThemeData(color: theme.colorScheme.primary),
               selectedLabelTextStyle: TextStyle(
                 color: theme.colorScheme.primary,
@@ -102,83 +76,15 @@ class ResponsiveNavigationWrapper extends ConsumerWidget {
                   SizedBox(height: 32),
                 ],
               ),
-              trailing: Expanded(
-                child: Align(
-                  alignment: Alignment.bottomCenter,
-                  child: Padding(
-                    padding: const EdgeInsets.only(bottom: 24),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const NotificationBellButton(),
-                        const SizedBox(height: 8),
-                        Consumer(
-                          builder: (context, ref, child) {
-                            final isDark =
-                                Theme.of(context).brightness == Brightness.dark;
-                            return IconButton(
-                              icon: Icon(
-                                isDark
-                                    ? Icons.light_mode_outlined
-                                    : Icons.dark_mode_outlined,
-                                color: theme.colorScheme.onSurface
-                                    .withValues(alpha: 0.7),
-                              ),
-                              onPressed: () => ref
-                                  .read(themeModeProvider.notifier)
-                                  .toggleTheme(context),
-                              tooltip: 'Toggle Theme',
-                            );
-                          },
-                        ),
-                        const SizedBox(height: 12),
-                        IconButton(
-                          icon: const Icon(Icons.logout, color: Colors.redAccent),
-                          onPressed: () => _handleLogout(context, ref),
-                          tooltip: 'Log Out',
-                        ),
-                      ],
+              destinations: destinations
+                  .map(
+                    (d) => NavigationRailDestination(
+                      icon: Icon(d.icon),
+                      selectedIcon: Icon(d.selectedIcon),
+                      label: Text(d.label),
                     ),
-                  ),
-                ),
-              ),
-              destinations: const [
-                NavigationRailDestination(
-                  icon: Icon(Icons.dashboard_outlined),
-                  selectedIcon: Icon(Icons.dashboard),
-                  label: Text('Overview'),
-                ),
-                NavigationRailDestination(
-                  icon: Icon(Icons.person_outline),
-                  selectedIcon: Icon(Icons.person),
-                  label: Text('Profile'),
-                ),
-                NavigationRailDestination(
-                  icon: Icon(Icons.history_outlined),
-                  selectedIcon: Icon(Icons.history),
-                  label: Text('Audit Logs'),
-                ),
-                NavigationRailDestination(
-                  icon: Icon(Icons.people_outline),
-                  selectedIcon: Icon(Icons.people),
-                  label: Text('Users'),
-                ),
-                NavigationRailDestination(
-                  icon: Icon(Icons.admin_panel_settings_outlined),
-                  selectedIcon: Icon(Icons.admin_panel_settings),
-                  label: Text('Roles'),
-                ),
-                NavigationRailDestination(
-                  icon: Icon(Icons.security_outlined),
-                  selectedIcon: Icon(Icons.security),
-                  label: Text('Permissions'),
-                ),
-                NavigationRailDestination(
-                  icon: Icon(Icons.settings_outlined),
-                  selectedIcon: Icon(Icons.settings),
-                  label: Text('Settings'),
-                ),
-              ],
+                  )
+                  .toList(),
             ),
             const VerticalDivider(thickness: 1, width: 1),
             Expanded(
@@ -188,7 +94,31 @@ class ResponsiveNavigationWrapper extends ConsumerWidget {
                   title: Text(title,
                       style: const TextStyle(fontWeight: FontWeight.bold)),
                   elevation: 0,
-                  actions: const [NotificationBellButton()],
+                  actions: [
+                    const NotificationBellButton(),
+                    Consumer(
+                      builder: (context, ref, child) {
+                        final isDark =
+                            Theme.of(context).brightness == Brightness.dark;
+                        return IconButton(
+                          icon: Icon(
+                            isDark
+                                ? Icons.light_mode_outlined
+                                : Icons.dark_mode_outlined,
+                          ),
+                          onPressed: () => ref
+                              .read(themeModeProvider.notifier)
+                              .toggleTheme(context),
+                          tooltip: 'Toggle Theme',
+                        );
+                      },
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.logout),
+                      onPressed: () => _handleLogout(context, ref),
+                      tooltip: 'Log Out',
+                    ),
+                  ],
                 ),
                 body: child,
               ),
@@ -272,90 +202,33 @@ class ResponsiveNavigationWrapper extends ConsumerWidget {
                 );
               },
             ),
-            ListTile(
-              leading: const Icon(Icons.dashboard),
-              title: const Text('Overview'),
-              selected: selectedIndex == 0,
-              onTap: () {
-                Navigator.pop(context);
-                _onItemTapped(context, 0);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.person),
-              title: const Text('Profile'),
-              selected: selectedIndex == 1,
-              onTap: () {
-                Navigator.pop(context);
-                _onItemTapped(context, 1);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.history),
-              title: const Text('Audit Logs'),
-              selected: selectedIndex == 2,
-              onTap: () {
-                Navigator.pop(context);
-                _onItemTapped(context, 2);
-              },
-            ),
-            const Divider(),
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Text(
-                'ADMINISTRATION',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey,
-                ),
+            Expanded(
+              child: ListView(
+                padding: EdgeInsets.zero,
+                children: [
+                  ...destinations.asMap().entries.map(
+                        (entry) => ListTile(
+                          leading: Icon(entry.value.selectedIcon),
+                          title: Text(entry.value.label),
+                          selected: selectedIndex == entry.key,
+                          onTap: () {
+                            Navigator.pop(context);
+                            navigateToIndex(context, entry.key, destinations);
+                          },
+                        ),
+                      ),
+                  const Divider(),
+                  ListTile(
+                    leading: const Icon(Icons.logout, color: Colors.redAccent),
+                    title: const Text('Log Out',
+                        style: TextStyle(color: Colors.redAccent)),
+                    onTap: () {
+                      Navigator.pop(context);
+                      _handleLogout(context, ref);
+                    },
+                  ),
+                ],
               ),
-            ),
-            ListTile(
-              leading: const Icon(Icons.people),
-              title: const Text('Users'),
-              selected: selectedIndex == 3,
-              onTap: () {
-                Navigator.pop(context);
-                _onItemTapped(context, 3);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.admin_panel_settings),
-              title: const Text('Roles'),
-              selected: selectedIndex == 4,
-              onTap: () {
-                Navigator.pop(context);
-                _onItemTapped(context, 4);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.security),
-              title: const Text('Permissions'),
-              selected: selectedIndex == 5,
-              onTap: () {
-                Navigator.pop(context);
-                _onItemTapped(context, 5);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.settings),
-              title: const Text('Settings'),
-              selected: selectedIndex == 6,
-              onTap: () {
-                Navigator.pop(context);
-                _onItemTapped(context, 6);
-              },
-            ),
-            const Spacer(),
-            ListTile(
-              leading: const Icon(Icons.logout, color: Colors.redAccent),
-              title: const Text('Log Out',
-                  style: TextStyle(color: Colors.redAccent)),
-              onTap: () {
-                Navigator.pop(context);
-                _handleLogout(context, ref);
-              },
             ),
             const SizedBox(height: 16),
           ],

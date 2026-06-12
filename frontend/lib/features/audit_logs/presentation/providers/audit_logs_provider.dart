@@ -15,9 +15,12 @@ const auditActionOptions = [
   'permission_remove',
   'profile_update',
   'password_change',
+  'customer_create',
+  'customer_update',
+  'customer_delete',
 ];
 
-const auditEntityOptions = ['User', 'Role'];
+const auditEntityOptions = ['User', 'Role', 'Customer'];
 
 class AuditLogsSearchNotifier extends Notifier<String> {
   @override

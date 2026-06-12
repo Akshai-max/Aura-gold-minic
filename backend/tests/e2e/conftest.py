@@ -93,6 +93,17 @@ async def admin_actor(test_db: AsyncSession) -> tuple[User, str]:
             "role:read",
             "role:write",
             "audit.view",
+            "customer.view",
+            "customer.create",
+            "customer.update",
+            "customer.delete",
+            "inventory.view",
+            "inventory.create",
+            "inventory.update",
+            "inventory.delete",
+            "transaction.view",
+            "transaction.create",
+            "transaction.update",
         ],
     )
     user, password = await create_e2e_user(

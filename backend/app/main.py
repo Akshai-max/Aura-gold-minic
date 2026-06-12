@@ -21,6 +21,10 @@ from app.api.audit import router as audit_router
 from app.api.notification import router as notification_router
 from app.api.profile import router as profile_router
 from app.api.dashboard import router as dashboard_router
+from app.api.customer import router as customer_router
+from app.api.inventory import router as inventory_router
+from app.api.supplier import router as supplier_router
+from app.api.transaction import router as transaction_router
 from app.database.session import verify_db_connection, async_session_maker
 from app.database import base as db_base  # noqa: F401
 from app.repositories.token_blacklist import TokenBlacklistRepository
@@ -124,4 +128,18 @@ app.include_router(
 )
 app.include_router(
     dashboard_router, prefix=f"{settings.API_V1_STR}/dashboard", tags=["dashboard"]
+)
+app.include_router(
+    customer_router, prefix=f"{settings.API_V1_STR}/customers", tags=["customers"]
+)
+app.include_router(
+    inventory_router, prefix=f"{settings.API_V1_STR}/inventory", tags=["inventory"]
+)
+app.include_router(
+    supplier_router, prefix=f"{settings.API_V1_STR}/suppliers", tags=["suppliers"]
+)
+app.include_router(
+    transaction_router,
+    prefix=f"{settings.API_V1_STR}/transactions",
+    tags=["transactions"],
 )

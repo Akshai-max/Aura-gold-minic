@@ -24,6 +24,15 @@ from app.services.audit import AuditService
 from app.services.notification import NotificationService
 from app.services.profile import ProfileService
 from app.services.dashboard import DashboardService
+from app.repositories.customer import CustomerRepository
+from app.repositories.supplier import SupplierRepository
+from app.repositories.inventory_item import InventoryItemRepository
+from app.repositories.stock_movement import StockMovementRepository
+from app.services.customer import CustomerService
+from app.services.supplier import SupplierService
+from app.services.inventory import InventoryService
+from app.repositories.transaction import TransactionRepository
+from app.services.transaction import TransactionService
 
 # Setup oauth2 scheme for bearer tokens
 reusable_oauth2 = OAuth2PasswordBearer(tokenUrl=f"{settings.API_V1_STR}/auth/login")
@@ -161,9 +170,95 @@ def get_profile_service(
     return ProfileService(user_repo, settings_repo, audit_service)
 
 
+def get_customer_repository(
+    db: AsyncSession = Depends(get_db_session),
+) -> CustomerRepository:
+    """Dependency injecting the CustomerRepository."""
+    return CustomerRepository(db)
+
+
+def get_customer_service(
+    customer_repo: CustomerRepository = Depends(get_customer_repository),
+    audit_service: AuditService = Depends(get_audit_service),
+) -> CustomerService:
+    """Dependency injecting the CustomerService."""
+    return CustomerService(customer_repo, audit_service)
+
+
+def get_supplier_repository(
+    db: AsyncSession = Depends(get_db_session),
+) -> SupplierRepository:
+    """Dependency injecting the SupplierRepository."""
+    return SupplierRepository(db)
+
+
+def get_inventory_item_repository(
+    db: AsyncSession = Depends(get_db_session),
+) -> InventoryItemRepository:
+    """Dependency injecting the InventoryItemRepository."""
+    return InventoryItemRepository(db)
+
+
+def get_stock_movement_repository(
+    db: AsyncSession = Depends(get_db_session),
+) -> StockMovementRepository:
+    """Dependency injecting the StockMovementRepository."""
+    return StockMovementRepository(db)
+
+
+def get_supplier_service(
+    supplier_repo: SupplierRepository = Depends(get_supplier_repository),
+    audit_service: AuditService = Depends(get_audit_service),
+) -> SupplierService:
+    """Dependency injecting the SupplierService."""
+    return SupplierService(supplier_repo, audit_service)
+
+
+def get_inventory_service(
+    inventory_repo: InventoryItemRepository = Depends(get_inventory_item_repository),
+    movement_repo: StockMovementRepository = Depends(get_stock_movement_repository),
+    supplier_repo: SupplierRepository = Depends(get_supplier_repository),
+    audit_service: AuditService = Depends(get_audit_service),
+) -> InventoryService:
+    """Dependency injecting the InventoryService."""
+    return InventoryService(
+        inventory_repo, movement_repo, supplier_repo, audit_service
+    )
+
+
+def get_transaction_repository(
+    db: AsyncSession = Depends(get_db_session),
+) -> TransactionRepository:
+    """Dependency injecting the TransactionRepository."""
+    return TransactionRepository(db)
+
+
+def get_transaction_service(
+    transaction_repo: TransactionRepository = Depends(get_transaction_repository),
+    customer_repo: CustomerRepository = Depends(get_customer_repository),
+    inventory_repo: InventoryItemRepository = Depends(get_inventory_item_repository),
+    customer_service: CustomerService = Depends(get_customer_service),
+    inventory_service: InventoryService = Depends(get_inventory_service),
+    audit_service: AuditService = Depends(get_audit_service),
+) -> TransactionService:
+    """Dependency injecting the TransactionService."""
+    return TransactionService(
+        transaction_repo,
+        customer_repo,
+        inventory_repo,
+        customer_service,
+        inventory_service,
+        audit_service,
+    )
+
+
 def get_dashboard_service(
     audit_service: AuditService = Depends(get_audit_service),
     notification_service: NotificationService = Depends(get_notification_service),
+    inventory_service: InventoryService = Depends(get_inventory_service),
+    transaction_service: TransactionService = Depends(get_transaction_service),
 ) -> DashboardService:
     """Dependency injecting the DashboardService."""
-    return DashboardService(audit_service, notification_service)
+    return DashboardService(
+        audit_service, notification_service, inventory_service, transaction_service
+    )

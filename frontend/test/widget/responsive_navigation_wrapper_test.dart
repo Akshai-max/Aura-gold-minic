@@ -94,8 +94,13 @@ void main() {
     expect(find.text('Overview'), findsNWidgets(2));
     expect(find.text('Profile'), findsOneWidget);
 
-    // Test Navigation action
-    await tester.tap(find.text('Profile'));
+    // Test Navigation action (tap rail icon; label may be hidden when unselected)
+    await tester.tap(
+      find.descendant(
+        of: find.byType(NavigationRail),
+        matching: find.byIcon(Icons.person_outline),
+      ),
+    );
     await tester.pumpAndSettle();
     expect(routesNavigated, contains('/profile'));
 

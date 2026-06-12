@@ -97,6 +97,36 @@ class NotificationService:
             user_id=user_id, is_read=False
         )
 
+    async def _notify_low_stock(self, metadata: dict) -> None:
+        """Notify inventory viewers about low stock with per-item cooldown."""
+        item_name = metadata.get("item_name", "An item")
+        quantity_after = metadata.get("quantity_after", "?")
+        alert_title = f"Low stock: {item_name}"
+        since = datetime.now(timezone.utc) - timedelta(
+            minutes=settings.NOTIFICATION_LOW_STOCK_COOLDOWN_MINUTES
+        )
+        message = (
+            f"'{item_name}' is at or below reorder level "
+            f"({quantity_after} units)."
+        )
+
+        user_ids = await self.user_repo.get_user_ids_with_permission("inventory.view")
+        for uid in user_ids:
+            if await self.notification_repo.has_recent_notification(
+                user_id=uid,
+                category=self.CATEGORY_SYSTEM,
+                title=alert_title,
+                since=since,
+            ):
+                continue
+            await self.create_notification(
+                user_id=uid,
+                title=alert_title,
+                message=message,
+                category=self.CATEGORY_SYSTEM,
+                metadata=metadata,
+            )
+
     async def handle_audit_event(
         self,
         action: str,
@@ -203,5 +233,99 @@ class NotificationService:
                 title="Password changed",
                 message="Your account password was changed.",
                 category=self.CATEGORY_SECURITY,
+                metadata=metadata,
+            )
+        elif action == audit_actions.CUSTOMER_CREATE and user_id:
+            name = metadata.get("full_name", "A customer")
+            await self.create_notification(
+                user_id=user_id,
+                title="Customer created",
+                message=f"Customer '{name}' was created.",
+                category=self.CATEGORY_SYSTEM,
+                metadata=metadata,
+            )
+        elif action == audit_actions.CUSTOMER_UPDATE and user_id:
+            await self.create_notification(
+                user_id=user_id,
+                title="Customer updated",
+                message="A customer record was updated.",
+                category=self.CATEGORY_SYSTEM,
+                metadata=metadata,
+            )
+        elif action == audit_actions.CUSTOMER_DELETE and user_id:
+            name = metadata.get("full_name", "A customer")
+            await self.create_notification(
+                user_id=user_id,
+                title="Customer deleted",
+                message=f"Customer '{name}' was deleted.",
+                category=self.CATEGORY_SYSTEM,
+                metadata=metadata,
+            )
+        elif action == audit_actions.INVENTORY_CREATE and user_id:
+            name = metadata.get("item_name", "An item")
+            await self.create_notification(
+                user_id=user_id,
+                title="Inventory item created",
+                message=f"Inventory item '{name}' was created.",
+                category=self.CATEGORY_SYSTEM,
+                metadata=metadata,
+            )
+        elif action == audit_actions.INVENTORY_UPDATE and user_id:
+            await self.create_notification(
+                user_id=user_id,
+                title="Inventory item updated",
+                message="An inventory item was updated.",
+                category=self.CATEGORY_SYSTEM,
+                metadata=metadata,
+            )
+        elif action == audit_actions.INVENTORY_DELETE and user_id:
+            name = metadata.get("item_name", "An item")
+            await self.create_notification(
+                user_id=user_id,
+                title="Inventory item deleted",
+                message=f"Inventory item '{name}' was deleted.",
+                category=self.CATEGORY_SYSTEM,
+                metadata=metadata,
+            )
+        elif action in (
+            audit_actions.STOCK_MOVEMENT_IN,
+            audit_actions.STOCK_MOVEMENT_OUT,
+            audit_actions.STOCK_MOVEMENT_ADJUST,
+        ) and user_id:
+            item_name = metadata.get("item_name", "An item")
+            movement = metadata.get("movement_type", "movement")
+            await self.create_notification(
+                user_id=user_id,
+                title="Stock movement recorded",
+                message=f"Stock {movement.replace('_', ' ')} for '{item_name}'.",
+                category=self.CATEGORY_SYSTEM,
+                metadata=metadata,
+            )
+            if metadata.get("is_low_stock"):
+                await self._notify_low_stock(metadata)
+        elif action == audit_actions.SUPPLIER_CREATE and user_id:
+            name = metadata.get("name", "A supplier")
+            await self.create_notification(
+                user_id=user_id,
+                title="Supplier created",
+                message=f"Supplier '{name}' was created.",
+                category=self.CATEGORY_SYSTEM,
+                metadata=metadata,
+            )
+        elif action == audit_actions.SUPPLIER_UPDATE and user_id:
+            await self.create_notification(
+                user_id=user_id,
+                title="Supplier updated",
+                message="A supplier record was updated.",
+                category=self.CATEGORY_SYSTEM,
+                metadata=metadata,
+            )
+        elif action == audit_actions.SUPPLIER_DELETE and user_id:
+            name = metadata.get("name", "A supplier")
+            await self.create_notification(
+                user_id=user_id,
+                title="Supplier deleted",
+                message=f"Supplier '{name}' was deleted.",
+                category=self.CATEGORY_SYSTEM,
                 metadata=metadata,
             )

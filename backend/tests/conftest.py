@@ -2,7 +2,7 @@ import asyncio
 import os
 import uuid
 from pathlib import Path
-from typing import AsyncGenerator, Generator
+from typing import AsyncGenerator, Generator  # noqa: F401 - Generator used by jwt_token
 import pytest
 import pytest_asyncio
 from httpx import AsyncClient, ASGITransport
@@ -105,13 +105,17 @@ class MockAsyncSession:
 
 @pytest.fixture(scope="session")
 def event_loop() -> Generator[asyncio.AbstractEventLoop, None, None]:
-    """Create an instance of the default event loop for each test case."""
-    try:
-        loop = asyncio.get_running_loop()
-    except RuntimeError:
-        loop = asyncio.new_event_loop()
+    """Session event loop shared by async fixtures and the test database engine."""
+    loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     yield loop
+    loop.run_until_complete(test_engine.dispose())
+    pending = [task for task in asyncio.all_tasks(loop) if not task.done()]
+    for task in pending:
+        task.cancel()
+    if pending:
+        loop.run_until_complete(asyncio.gather(*pending, return_exceptions=True))
+    loop.run_until_complete(asyncio.sleep(0))
     loop.close()
 
 
@@ -138,6 +142,7 @@ async def setup_test_db() -> AsyncGenerator[None, None]:
                 "CREATE TABLE IF NOT EXISTS audit_logs_default PARTITION OF audit_logs DEFAULT"
             )
         )
+        await conn.execute(text("CREATE EXTENSION IF NOT EXISTS pg_trgm"))
 
     # Seed data
     async with test_session_maker() as session:
@@ -145,30 +150,24 @@ async def setup_test_db() -> AsyncGenerator[None, None]:
 
     yield
 
-    # Clean up and dispose connections
-    await test_engine.dispose()
-
 
 # --- Real Database Session and Client for Integration/Security Tests ---
 @pytest_asyncio.fixture
 async def test_db() -> AsyncGenerator[AsyncSession, None]:
     """Fixture yielding a real async database session wrapped in a transaction that rolls back."""
-    async with test_engine.connect() as connection:
-        # Start outer transaction
-        transaction = await connection.begin()
-
-        # Create session bound to connection with savepoint support
-        async with AsyncSession(
-            bind=connection,
-            expire_on_commit=False,
-            join_transaction_mode="create_savepoint",
-        ) as session:
-            yield session
-            # Rollback session changes
-            await session.rollback()
-
-        # Rollback outer transaction
+    connection = await test_engine.connect()
+    transaction = await connection.begin()
+    session = AsyncSession(
+        bind=connection,
+        expire_on_commit=False,
+        join_transaction_mode="create_savepoint",
+    )
+    try:
+        yield session
+    finally:
+        await session.close()
         await transaction.rollback()
+        await connection.close()
 
 
 @pytest_asyncio.fixture

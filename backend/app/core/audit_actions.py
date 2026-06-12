@@ -15,6 +15,21 @@ PASSWORD_CHANGE = "password_change"
 AUDIT_EXPORT = "audit_export"
 AVATAR_UPDATE = "avatar_update"
 SETTINGS_UPDATE = "settings_update"
+CUSTOMER_CREATE = "customer_create"
+CUSTOMER_UPDATE = "customer_update"
+CUSTOMER_DELETE = "customer_delete"
+INVENTORY_CREATE = "inventory_create"
+INVENTORY_UPDATE = "inventory_update"
+INVENTORY_DELETE = "inventory_delete"
+SUPPLIER_CREATE = "supplier_create"
+SUPPLIER_UPDATE = "supplier_update"
+SUPPLIER_DELETE = "supplier_delete"
+STOCK_MOVEMENT_IN = "stock_movement_in"
+STOCK_MOVEMENT_OUT = "stock_movement_out"
+STOCK_MOVEMENT_ADJUST = "stock_movement_adjust"
+TRANSACTION_CREATE = "transaction_create"
+TRANSACTION_UPDATE = "transaction_update"
+TRANSACTION_CANCEL = "transaction_cancel"
 
 ALL_ACTIONS = [
     LOGIN_SUCCESS,
@@ -32,4 +47,19 @@ ALL_ACTIONS = [
     AUDIT_EXPORT,
     AVATAR_UPDATE,
     SETTINGS_UPDATE,
+    CUSTOMER_CREATE,
+    CUSTOMER_UPDATE,
+    CUSTOMER_DELETE,
+    INVENTORY_CREATE,
+    INVENTORY_UPDATE,
+    INVENTORY_DELETE,
+    SUPPLIER_CREATE,
+    SUPPLIER_UPDATE,
+    SUPPLIER_DELETE,
+    STOCK_MOVEMENT_IN,
+    STOCK_MOVEMENT_OUT,
+    STOCK_MOVEMENT_ADJUST,
+    TRANSACTION_CREATE,
+    TRANSACTION_UPDATE,
+    TRANSACTION_CANCEL,
 ]

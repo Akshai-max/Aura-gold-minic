@@ -33,6 +33,17 @@ async def seed_data(session: AsyncSession) -> None:
         {"name": "user.update", "description": "Update user details"},
         {"name": "user.delete", "description": "Delete users"},
         {"name": "audit.view", "description": "View system audit logs"},
+        {"name": "customer.view", "description": "View customers"},
+        {"name": "customer.create", "description": "Create customers"},
+        {"name": "customer.update", "description": "Update customers"},
+        {"name": "customer.delete", "description": "Delete customers"},
+        {"name": "inventory.view", "description": "View inventory and suppliers"},
+        {"name": "inventory.create", "description": "Create inventory items and suppliers"},
+        {"name": "inventory.update", "description": "Update inventory and record stock movements"},
+        {"name": "inventory.delete", "description": "Delete inventory items and suppliers"},
+        {"name": "transaction.view", "description": "View transactions and revenue metrics"},
+        {"name": "transaction.create", "description": "Create transactions"},
+        {"name": "transaction.update", "description": "Update or cancel transactions"},
     ]
 
     db_permissions = {}
@@ -98,6 +109,17 @@ async def seed_data(session: AsyncSession) -> None:
         "user:read",
         "role:read",
         "audit_log:read",
+        "customer.view",
+        "customer.create",
+        "customer.update",
+        "customer.delete",
+        "inventory.view",
+        "inventory.create",
+        "inventory.update",
+        "inventory.delete",
+        "transaction.view",
+        "transaction.create",
+        "transaction.update",
     ]:
         perm = db_permissions[perm_name]
         if perm not in admin_role.permissions:
