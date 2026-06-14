@@ -26,7 +26,10 @@ async def test_e2e_login_dashboard_logout_flow(
 
     audit_response = await db_client.get("/api/v1/audit-logs/?limit=5", headers=headers)
     assert audit_response.status_code == 200
-    assert isinstance(audit_response.json(), list)
+    audit_data = audit_response.json()
+    assert "items" in audit_data
+    assert "total" in audit_data
+    assert isinstance(audit_data["items"], list)
 
     logout_response = await db_client.post(
         "/api/v1/auth/logout",

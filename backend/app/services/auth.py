@@ -4,11 +4,13 @@ from typing import Optional
 
 from app.core.exceptions import AuthenticationException
 from app.core.logging import logger
+from app.core import audit_actions
 from app.core.security import (
     verify_password,
     create_access_token,
     create_refresh_token,
     decode_token,
+    validate_token_version,
 )
 from app.models.user import User
 from app.repositories.user import UserRepository
@@ -46,7 +48,7 @@ class AuthService:
             if self.audit_service:
                 await self.audit_service.log_action(
                     user_id=user.id,
-                    action="login_success",
+                    action=audit_actions.LOGIN_SUCCESS,
                     entity_type="User",
                     entity_id=str(user.id),
                     metadata={"email": email},
@@ -56,7 +58,7 @@ class AuthService:
             if self.audit_service:
                 await self.audit_service.log_action(
                     user_id=None,
-                    action="login_failure",
+                    action=audit_actions.LOGIN_FAILURE,
                     entity_type="User",
                     metadata={"email": email, "reason": e.message},
                 )
@@ -64,7 +66,6 @@ class AuthService:
 
     async def refresh_tokens(self, refresh_token_str: str) -> Token:
         """Perform refresh token rotation (RTR) and return a new token pair."""
-        # Decode and validate refresh token
         payload = decode_token(refresh_token_str)
 
         if payload.get("type") != "refresh":
@@ -77,7 +78,6 @@ class AuthService:
         if not jti or not sub or not exp:
             raise AuthenticationException("Invalid token payload")
 
-        # Check blacklist
         if await self.token_blacklist_repo.is_blacklisted(jti):
             logger.warning(
                 "security_compromise_attempt",
@@ -87,7 +87,6 @@ class AuthService:
             )
             raise AuthenticationException("Invalid or revoked refresh token")
 
-        # Fetch and verify user
         try:
             user_id = uuid.UUID(sub)
         except ValueError:
@@ -97,14 +96,19 @@ class AuthService:
         if not user or user.is_deleted or not user.is_active:
             raise AuthenticationException("User account is inactive or not found")
 
-        # Blacklist the old refresh token
+        validate_token_version(payload, user.token_version or 0)
+
         expires_at = datetime.fromtimestamp(exp, tz=timezone.utc)
         await self.token_blacklist_repo.blacklist_token(jti, expires_at)
 
-        # Generate new pair
         new_jti = str(uuid.uuid4())
-        new_access_token = create_access_token(subject=user.id)
-        new_refresh_token = create_refresh_token(subject=user.id, jti=new_jti)
+        token_version = user.token_version or 0
+        new_access_token = create_access_token(
+            subject=user.id, token_version=token_version
+        )
+        new_refresh_token = create_refresh_token(
+            subject=user.id, jti=new_jti, token_version=token_version
+        )
 
         return Token(
             access_token=new_access_token,
@@ -116,8 +120,6 @@ class AuthService:
         try:
             payload = decode_token(refresh_token_str)
         except AuthenticationException as e:
-            # If token is already invalid/expired, logout is effectively successful
-            # but we'll raise an error or just return. Let's raise if they pass an invalid token.
             raise e
 
         if payload.get("type") != "refresh":
@@ -130,18 +132,16 @@ class AuthService:
         if not jti or not exp:
             raise AuthenticationException("Invalid token payload")
 
-        # Check if already blacklisted to avoid duplicate records
         if not await self.token_blacklist_repo.is_blacklisted(jti):
             expires_at = datetime.fromtimestamp(exp, tz=timezone.utc)
             await self.token_blacklist_repo.blacklist_token(jti, expires_at)
 
-            # Log logout action
             if self.audit_service and sub:
                 try:
                     user_id = uuid.UUID(sub)
                     await self.audit_service.log_action(
                         user_id=user_id,
-                        action="logout",
+                        action=audit_actions.LOGOUT,
                         entity_type="User",
                         entity_id=str(user_id),
                     )

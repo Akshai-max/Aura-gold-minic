@@ -49,7 +49,10 @@ async def test_log_action_resolves_context_meta(audit_service, mock_audit_reposi
         assert created_data["action"] == "test_action"
         assert created_data["entity_type"] == "Test"
         assert created_data["entity_id"] == "999"
-        assert created_data["meta_data"] == {"detail": "some_info"}
+        assert created_data["meta_data"] == {
+            "detail": "some_info",
+            "ip": "192.168.1.50",
+        }
         assert created_data["ip_address"] == "192.168.1.50"
         assert created_data["user_agent"] == "Safari"
         assert "timestamp" in created_data
@@ -63,9 +66,10 @@ async def test_list_audit_logs(audit_service, mock_audit_repository):
     """Verify list_audit_logs calls repository list_audit_logs with filters."""
     mock_logs = [AuditLog(action="a"), AuditLog(action="b")]
     mock_audit_repository.list_audit_logs = AsyncMock(return_value=mock_logs)
+    mock_audit_repository.count_audit_logs = AsyncMock(return_value=2)
 
     filter_user_id = uuid.uuid4()
-    result = await audit_service.list_audit_logs(
+    items, total = await audit_service.list_audit_logs(
         skip=5,
         limit=50,
         user_id=filter_user_id,
@@ -73,11 +77,15 @@ async def test_list_audit_logs(audit_service, mock_audit_repository):
         entity_type="SomeEntity",
     )
 
-    assert result == mock_logs
+    assert items == mock_logs
+    assert total == 2
     mock_audit_repository.list_audit_logs.assert_called_once_with(
         skip=5,
         limit=50,
         user_id=filter_user_id,
         action="some_action",
         entity_type="SomeEntity",
+        start_date=None,
+        end_date=None,
+        search=None,
     )
