@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 from typing import Optional
-from sqlalchemy import select
+from sqlalchemy import select, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.token_blacklist import TokenBlacklist
 from app.repositories.base import BaseRepository
@@ -29,3 +29,12 @@ class TokenBlacklistRepository(BaseRepository[TokenBlacklist]):
         if expires_at.tzinfo is None:
             expires_at = expires_at.replace(tzinfo=timezone.utc)
         return await self.create({"jti": jti, "expires_at": expires_at})
+
+    async def delete_expired(self, before: datetime) -> int:
+        """Remove expired blacklist entries."""
+        if before.tzinfo is None:
+            before = before.replace(tzinfo=timezone.utc)
+        stmt = delete(TokenBlacklist).where(TokenBlacklist.expires_at < before)
+        result = await self.db.execute(stmt)
+        await self.db.commit()
+        return result.rowcount or 0

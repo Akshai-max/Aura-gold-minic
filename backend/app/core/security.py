@@ -32,7 +32,9 @@ def get_password_hash(password: str) -> str:
 
 
 def create_access_token(
-    subject: Any, expires_delta: Union[timedelta, None] = None
+    subject: Any,
+    token_version: int = 0,
+    expires_delta: Union[timedelta, None] = None,
 ) -> str:
     """Generate a JWT access token for a subject (user ID)."""
     if expires_delta:
@@ -41,12 +43,20 @@ def create_access_token(
         expire = datetime.now(timezone.utc) + timedelta(
             minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES
         )
-    to_encode = {"exp": expire, "sub": str(subject), "type": "access"}
+    to_encode = {
+        "exp": expire,
+        "sub": str(subject),
+        "type": "access",
+        "tv": token_version,
+    }
     return jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
 
 
 def create_refresh_token(
-    subject: Any, jti: str, expires_delta: Union[timedelta, None] = None
+    subject: Any,
+    jti: str,
+    token_version: int = 0,
+    expires_delta: Union[timedelta, None] = None,
 ) -> str:
     """Generate a JWT refresh token for a subject (user ID) with a unique JTI."""
     if expires_delta:
@@ -55,8 +65,21 @@ def create_refresh_token(
         expire = datetime.now(timezone.utc) + timedelta(
             minutes=settings.REFRESH_TOKEN_EXPIRE_MINUTES
         )
-    to_encode = {"exp": expire, "sub": str(subject), "jti": jti, "type": "refresh"}
+    to_encode = {
+        "exp": expire,
+        "sub": str(subject),
+        "jti": jti,
+        "type": "refresh",
+        "tv": token_version,
+    }
     return jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
+
+
+def validate_token_version(payload: dict[str, Any], user_token_version: int) -> None:
+    """Reject tokens whose version does not match the user's current version."""
+    token_version = payload.get("tv", 0)
+    if token_version != user_token_version:
+        raise AuthenticationException("Session has been revoked. Please log in again.")
 
 
 def decode_token(token: str) -> dict[str, Any]:

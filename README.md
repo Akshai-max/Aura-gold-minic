@@ -266,6 +266,10 @@ frontend/
    ```
    API docs available at: `http://localhost:8000/docs`
 
+   **Docker:** The API container runs `alembic upgrade head` automatically on startup via `entrypoint.sh`. For local development you must run migrations manually (step 5) before starting the server.
+
+   **Customer module:** Requires migration `h3c4d5e6f7g8` (customers table) and `i4d5e6f7g8h9` (constraints/indexes). Run `alembic current` to confirm you are at head.
+
 ### Flutter Mobile App Setup
 
 1. **Install dependencies**:

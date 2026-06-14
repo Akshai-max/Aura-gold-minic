@@ -1,8 +1,11 @@
-import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
 import 'package:ags_gold/config/env_config.dart';
 import 'package:ags_gold/services/interfaces/secure_storage.dart';
+
+const _kContentType = 'Content-Type';
+const _kAccept = 'Accept';
+const _kAuthorization = 'Authorization';
 
 // Custom API Exceptions
 abstract class ApiException implements Exception {
@@ -52,10 +55,7 @@ class ServerException extends ApiException {
 
 class RateLimitException extends ApiException {
   RateLimitException([String? message])
-    : super(
-        message ?? 'Too many requests. Please try again later.',
-        429,
-      );
+    : super(message ?? 'Too many requests. Please try again later.', 429);
 }
 
 class UnknownApiException extends ApiException {
@@ -64,8 +64,10 @@ class UnknownApiException extends ApiException {
 
 class ApiClient {
   late final Dio _dio;
+  late final Dio _refreshDio;
   final ISecureStorage storageService;
   final VoidCallback? onUnauthorized;
+  bool _isRefreshing = false;
 
   ApiClient({
     required this.storageService,
@@ -75,8 +77,21 @@ class ApiClient {
   }) {
     if (testDio != null) {
       _dio = testDio;
+      _refreshDio = testDio;
     } else {
       final activeConfig = config ?? EnvConfig.active;
+
+      _refreshDio = Dio(
+        BaseOptions(
+          baseUrl: activeConfig.baseUrl,
+          connectTimeout: activeConfig.connectionTimeout,
+          receiveTimeout: activeConfig.receiveTimeout,
+          headers: {
+            _kContentType: 'application/json',
+            _kAccept: 'application/json',
+          },
+        ),
+      );
 
       _dio = Dio(
         BaseOptions(
@@ -84,8 +99,8 @@ class ApiClient {
           connectTimeout: activeConfig.connectionTimeout,
           receiveTimeout: activeConfig.receiveTimeout,
           headers: {
-            HttpHeaders.contentTypeHeader: 'application/json',
-            HttpHeaders.acceptHeader: 'application/json',
+            _kContentType: 'application/json',
+            _kAccept: 'application/json',
           },
         ),
       );
@@ -110,11 +125,32 @@ class ApiClient {
         onRequest: (options, handler) async {
           final token = await storageService.getAccessToken();
           if (token != null && token.isNotEmpty) {
-            options.headers[HttpHeaders.authorizationHeader] = 'Bearer $token';
+            options.headers[_kAuthorization] = 'Bearer $token';
           }
           return handler.next(options);
         },
-        onError: (DioException error, handler) {
+        onError: (DioException error, handler) async {
+          final statusCode = error.response?.statusCode;
+          final path = error.requestOptions.path;
+          final isAuthPath =
+              path.contains('/auth/login') ||
+              path.contains('/auth/refresh') ||
+              path.contains('/auth/logout');
+
+          if (statusCode == 401 && !isAuthPath) {
+            final refreshed = await _tryRefreshToken();
+            if (refreshed) {
+              try {
+                final token = await storageService.getAccessToken();
+                error.requestOptions.headers[_kAuthorization] = 'Bearer $token';
+                final retryResponse = await _dio.fetch(error.requestOptions);
+                return handler.resolve(retryResponse);
+              } on DioException catch (retryError) {
+                error = retryError;
+              }
+            }
+          }
+
           final appException = _handleDioException(error);
           if (appException is UnauthorizedException) {
             onUnauthorized?.call();
@@ -130,6 +166,40 @@ class ApiClient {
         },
       ),
     );
+  }
+
+  Future<bool> _tryRefreshToken() async {
+    if (_isRefreshing) {
+      return false;
+    }
+    _isRefreshing = true;
+    try {
+      final refreshToken = await storageService.getRefreshToken();
+      if (refreshToken == null || refreshToken.isEmpty) {
+        return false;
+      }
+
+      final response = await _refreshDio.post<Map<String, dynamic>>(
+        '/auth/refresh',
+        data: {'refresh_token': refreshToken},
+      );
+      final data = response.data;
+      if (data == null ||
+          data['access_token'] == null ||
+          data['refresh_token'] == null) {
+        return false;
+      }
+
+      await storageService.saveTokens(
+        accessToken: data['access_token'] as String,
+        refreshToken: data['refresh_token'] as String,
+      );
+      return true;
+    } catch (_) {
+      return false;
+    } finally {
+      _isRefreshing = false;
+    }
   }
 
   ApiException _handleDioException(DioException error) {
@@ -195,9 +265,6 @@ class ApiClient {
 
       case DioExceptionType.unknown:
       default:
-        if (error.error is SocketException) {
-          return NetworkException();
-        }
         return UnknownApiException(
           error.message ?? 'An unknown network error occurred.',
         );
@@ -221,7 +288,6 @@ class ApiClient {
     return '';
   }
 
-  // Wrapper helper methods
   Future<Response<T>> get<T>(
     String path, {
     Map<String, dynamic>? queryParameters,
@@ -233,6 +299,23 @@ class ApiClient {
         path,
         queryParameters: queryParameters,
         options: options,
+        cancelToken: cancelToken,
+      );
+    } on DioException catch (e) {
+      throw e.error as ApiException;
+    }
+  }
+
+  Future<Response<List<int>>> getBytes(
+    String path, {
+    Map<String, dynamic>? queryParameters,
+    CancelToken? cancelToken,
+  }) async {
+    try {
+      return await _dio.get<List<int>>(
+        path,
+        queryParameters: queryParameters,
+        options: Options(responseType: ResponseType.bytes),
         cancelToken: cancelToken,
       );
     } on DioException catch (e) {

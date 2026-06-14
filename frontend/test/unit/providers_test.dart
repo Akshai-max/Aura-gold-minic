@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ags_gold/services/service_providers.dart';
 import 'package:ags_gold/services/api_client.dart';
 import '../mocks/mock_services.dart';
@@ -14,6 +15,7 @@ void main() {
   late MockApiClient mockApiClient;
 
   setUp(() {
+    SharedPreferences.setMockInitialValues({});
     mockStorage = MockSecureStorage();
     mockApiClient = MockApiClient();
   });
@@ -26,14 +28,18 @@ void main() {
       expect(container.read(themeModeProvider), ThemeMode.system);
     });
 
-    test('setThemeMode changes theme mode', () {
+    test('setThemeMode changes theme mode', () async {
       final container = ProviderContainer();
       addTearDown(container.dispose);
 
-      container.read(themeModeProvider.notifier).setThemeMode(ThemeMode.dark);
+      await container
+          .read(themeModeProvider.notifier)
+          .setThemeMode(ThemeMode.dark);
       expect(container.read(themeModeProvider), ThemeMode.dark);
 
-      container.read(themeModeProvider.notifier).setThemeMode(ThemeMode.light);
+      await container
+          .read(themeModeProvider.notifier)
+          .setThemeMode(ThemeMode.light);
       expect(container.read(themeModeProvider), ThemeMode.light);
     });
   });
@@ -147,24 +153,30 @@ void main() {
   });
 
   group('AuthNotifier - core state transitions', () {
-    testWidgets('initial state is loading, resolves to unauthenticated when no token', (tester) async {
-      when(() => mockStorage.hasAccessToken()).thenAnswer((_) async => false);
+    testWidgets(
+      'initial state is loading, resolves to unauthenticated when no token',
+      (tester) async {
+        when(() => mockStorage.hasAccessToken()).thenAnswer((_) async => false);
 
-      final container = ProviderContainer(
-        overrides: [
-          secureStorageProvider.overrideWithValue(mockStorage),
-          apiClientProvider.overrideWithValue(mockApiClient),
-        ],
-      );
-      addTearDown(container.dispose);
+        final container = ProviderContainer(
+          overrides: [
+            secureStorageProvider.overrideWithValue(mockStorage),
+            apiClientProvider.overrideWithValue(mockApiClient),
+          ],
+        );
+        addTearDown(container.dispose);
 
-      expect(container.read(authNotifierProvider), isA<AsyncLoading<AuthStatus>>());
+        expect(
+          container.read(authNotifierProvider),
+          isA<AsyncLoading<AuthStatus>>(),
+        );
 
-      await tester.pump(const Duration(seconds: 2));
+        await tester.pump(const Duration(seconds: 2));
 
-      final state = container.read(authNotifierProvider);
-      expect(state.value, AuthStatus.unauthenticated);
-    });
+        final state = container.read(authNotifierProvider);
+        expect(state.value, AuthStatus.unauthenticated);
+      },
+    );
 
     testWidgets('resolves to authenticated when token exists', (tester) async {
       when(() => mockStorage.hasAccessToken()).thenAnswer((_) async => true);
@@ -180,10 +192,15 @@ void main() {
       container.read(authNotifierProvider);
       await tester.pump(const Duration(seconds: 2));
 
-      expect(container.read(authNotifierProvider).value, AuthStatus.authenticated);
+      expect(
+        container.read(authNotifierProvider).value,
+        AuthStatus.authenticated,
+      );
     });
 
-    testWidgets('clearSession clears tokens and sets unauthenticated', (tester) async {
+    testWidgets('clearSession clears tokens and sets unauthenticated', (
+      tester,
+    ) async {
       when(() => mockStorage.hasAccessToken()).thenAnswer((_) async => true);
       when(() => mockStorage.clearTokens()).thenAnswer((_) async => {});
 
@@ -200,16 +217,18 @@ void main() {
 
       await container.read(authNotifierProvider.notifier).clearSession();
 
-      expect(container.read(authNotifierProvider).value, AuthStatus.unauthenticated);
+      expect(
+        container.read(authNotifierProvider).value,
+        AuthStatus.unauthenticated,
+      );
       verify(() => mockStorage.clearTokens()).called(1);
     });
 
     testWidgets('login failure rethrows and stores error', (tester) async {
       when(() => mockStorage.hasAccessToken()).thenAnswer((_) async => false);
-      when(() => mockApiClient.post(
-            '/auth/login',
-            data: any(named: 'data'),
-          )).thenThrow(UnauthorizedException('Invalid credentials'));
+      when(
+        () => mockApiClient.post('/auth/login', data: any(named: 'data')),
+      ).thenThrow(UnauthorizedException('Invalid credentials'));
 
       final container = ProviderContainer(
         overrides: [
@@ -233,7 +252,9 @@ void main() {
       expect(container.read(authNotifierProvider).hasError, isTrue);
     });
 
-    testWidgets('logout proceeds without server call when no refresh token', (tester) async {
+    testWidgets('logout proceeds without server call when no refresh token', (
+      tester,
+    ) async {
       when(() => mockStorage.hasAccessToken()).thenAnswer((_) async => true);
       when(() => mockStorage.getRefreshToken()).thenAnswer((_) async => null);
       when(() => mockStorage.clearTokens()).thenAnswer((_) async => {});
@@ -251,7 +272,10 @@ void main() {
 
       await container.read(authNotifierProvider.notifier).logout();
 
-      expect(container.read(authNotifierProvider).value, AuthStatus.unauthenticated);
+      expect(
+        container.read(authNotifierProvider).value,
+        AuthStatus.unauthenticated,
+      );
       verify(() => mockStorage.clearTokens()).called(1);
       verifyNever(() => mockApiClient.post(any(), data: any(named: 'data')));
     });

@@ -26,8 +26,11 @@ async def login(
 
     # Generate a unique ID for the refresh token
     jti = str(uuid.uuid4())
-    access_token = create_access_token(subject=user.id)
-    refresh_token = create_refresh_token(subject=user.id, jti=jti)
+    token_version = user.token_version or 0
+    access_token = create_access_token(subject=user.id, token_version=token_version)
+    refresh_token = create_refresh_token(
+        subject=user.id, jti=jti, token_version=token_version
+    )
 
     return Token(
         access_token=access_token,

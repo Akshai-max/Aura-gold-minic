@@ -1,5 +1,6 @@
 from typing import Any, Optional
-from sqlalchemy import select
+
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.user import User
 from app.repositories.base import BaseRepository
@@ -16,6 +17,25 @@ class UserRepository(BaseRepository[User]):
         query = select(User).where(User.email == email, User.is_deleted.is_(False))
         result = await self.db.execute(query)
         return result.scalars().first()
+
+    async def get_user_ids_with_permission(self, permission_name: str) -> list[Any]:
+        """Return active user IDs granted a specific permission."""
+        from app.models.permission import Permission
+        from app.models.role import Role
+
+        query = (
+            select(User.id)
+            .join(User.roles)
+            .join(Role.permissions)
+            .where(
+                User.is_deleted.is_(False),
+                User.is_active.is_(True),
+                Permission.name == permission_name,
+            )
+            .distinct()
+        )
+        result = await self.db.execute(query)
+        return list(result.scalars().all())
 
     async def get_with_roles_and_permissions(self, user_id: Any) -> Optional[User]:
         """Fetch user with eager loading of roles and nested permissions."""
@@ -73,3 +93,11 @@ class UserRepository(BaseRepository[User]):
         query = query.offset(skip).limit(limit)
         result = await self.db.execute(query)
         return list(result.scalars().unique().all())
+
+    async def count_active_users(self) -> int:
+        query = select(func.count(User.id)).where(
+            User.is_deleted.is_(False),
+            User.is_active.is_(True),
+        )
+        result = await self.db.execute(query)
+        return int(result.scalar() or 0)
