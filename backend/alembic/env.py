@@ -7,7 +7,7 @@ from alembic import context
 
 # Import target Metadata
 from app.database.base import Base
-from app.core.config import settings
+from app.core.config import database_connect_args, settings
 
 # this is the Alembic Config object
 config = context.config
@@ -51,6 +51,7 @@ async def run_migrations_online() -> None:
     connectable = create_async_engine(
         settings.DATABASE_URL,
         poolclass=pool.NullPool,
+        connect_args=database_connect_args(settings.DATABASE_URL),
     )
 
     async with connectable.connect() as connection:

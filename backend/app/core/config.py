@@ -6,6 +6,7 @@ from pydantic import field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 _BACKEND_ROOT = Path(__file__).resolve().parents[2]
+_ON_RAILWAY = bool(os.getenv("RAILWAY_ENVIRONMENT") or os.getenv("RAILWAY_PROJECT_ID"))
 
 
 def normalize_database_url(url: str) -> str:
@@ -19,9 +20,25 @@ def normalize_database_url(url: str) -> str:
     return url
 
 
+def database_connect_args(url: str) -> dict:
+    """Railway public Postgres endpoints require TLS; private *.railway.internal does not."""
+    from urllib.parse import urlparse
+
+    host = (urlparse(url).hostname or "").lower()
+    if host.endswith(".railway.internal"):
+        return {}
+    if any(
+        marker in host
+        for marker in (".rlwy.net", "railway.app", "amazonaws.com", "neon.tech")
+    ):
+        return {"ssl": True}
+    return {}
+
+
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
-        env_file=_BACKEND_ROOT / ".env",
+        # Load shipped .env for API keys etc.; Railway injects DATABASE_URL via os.environ.
+        env_file=_BACKEND_ROOT / ".env" if (_BACKEND_ROOT / ".env").exists() else None,
         env_ignore_empty=True,
         extra="ignore",
     )
@@ -144,7 +161,7 @@ class Settings(BaseSettings):
     @model_validator(mode="after")
     def assemble_db_url(self) -> "Settings":
         env_url = os.getenv("DATABASE_URL", "").strip()
-        on_railway = bool(os.getenv("RAILWAY_ENVIRONMENT") or os.getenv("RAILWAY_PROJECT_ID"))
+        on_railway = _ON_RAILWAY
 
         if env_url:
             self.DATABASE_URL = normalize_database_url(env_url)
