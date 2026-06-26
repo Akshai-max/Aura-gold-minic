@@ -85,11 +85,9 @@ void main() {
 
     // Initial pump — splash / loading state
     await tester.pump();
-    // Skip the 2-second artificial splash delay in AuthNotifier
-    await tester.pump(const Duration(seconds: 2));
     await tester.pumpAndSettle();
 
-    // Verify we are on the Login screen
+    // Verify we are on the Login screen (staff audience preset)
     expect(find.byKey(const Key('loginButton')), findsOneWidget);
 
     // Enter credentials
@@ -161,7 +159,6 @@ void main() {
       );
 
       await tester.pump();
-      await tester.pump(const Duration(seconds: 2));
       await tester.pumpAndSettle();
 
       // Should go directly to Dashboard — no login screen
@@ -182,13 +179,13 @@ void main() {
         overrides: [
           apiClientProvider.overrideWithValue(mockApi),
           secureStorageProvider.overrideWithValue(mockStorage),
+          ...authDashboardTestOverrides,
         ],
         child: const AGSGoldApp(),
       ),
     );
 
     await tester.pump();
-    await tester.pump(const Duration(seconds: 2));
     await tester.pumpAndSettle();
 
     // On login screen, tap submit without entering anything

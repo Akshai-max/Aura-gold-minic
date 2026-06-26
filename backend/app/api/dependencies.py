@@ -23,6 +23,8 @@ from app.repositories.user_settings import UserSettingsRepository
 from app.services.audit import AuditService
 from app.services.notification import NotificationService
 from app.services.profile import ProfileService
+from app.services.kyc import KycService
+from app.services.sandbox_kyc import SandboxKycClient
 from app.services.dashboard import DashboardService
 from app.repositories.customer import CustomerRepository
 from app.repositories.supplier import SupplierRepository
@@ -35,9 +37,28 @@ from app.repositories.transaction import TransactionRepository
 from app.repositories.report import ReportRepository
 from app.repositories.workflow import WorkflowRepository
 from app.services.executive_dashboard import ExecutiveDashboardService
+from app.services.personal_dashboard import PersonalDashboardService
+from app.services.metal_prices import MetalPriceService
+from app.services.gold_payment import GoldPaymentService
+from app.services.gold_scheme import GoldSchemeService
+from app.services.razorpay_client import RazorpayClient
+from app.repositories.payment_order import PaymentOrderRepository
+from app.repositories.referral_reward import ReferralRewardRepository
+from app.services.referral import ReferralService
 from app.services.transaction import TransactionService
 from app.services.report import ReportService
 from app.services.workflow import WorkflowService
+from app.repositories.bank_account import (
+    BankLinkChallengeRepository,
+    UserBankAccountRepository,
+)
+from app.repositories.signup_otp import SignupOtpRepository
+from app.services.bank_account import BankAccountService
+from app.services.ifsc import IfscService
+from app.services.signup_otp import SignupOtpService
+from app.services.sms import SmsService
+from app.repositories.gold_sell_inquiry import GoldSellInquiryRepository
+from app.services.gold_sell_inquiry import GoldSellInquiryService
 
 # Setup oauth2 scheme for bearer tokens
 reusable_oauth2 = OAuth2PasswordBearer(tokenUrl=f"{settings.API_V1_STR}/auth/login")
@@ -157,13 +178,72 @@ async def get_current_user(
     return user
 
 
+def get_referral_reward_repository(
+    db: AsyncSession = Depends(get_db_session),
+) -> ReferralRewardRepository:
+    return ReferralRewardRepository(db)
+
+
+def get_referral_service(
+    user_repo: UserRepository = Depends(get_user_repository),
+    reward_repo: ReferralRewardRepository = Depends(get_referral_reward_repository),
+) -> ReferralService:
+    return ReferralService(user_repo, reward_repo)
+
+
 def get_user_service(
     user_repo: UserRepository = Depends(get_user_repository),
     role_repo: RoleRepository = Depends(get_role_repository),
     audit_service: AuditService = Depends(get_audit_service),
+    referral_service: ReferralService = Depends(get_referral_service),
 ) -> UserService:
     """Dependency injecting the UserService."""
-    return UserService(user_repo, role_repo, audit_service)
+    return UserService(user_repo, role_repo, audit_service, referral_service)
+
+
+def get_signup_otp_repository(
+    db: AsyncSession = Depends(get_db_session),
+) -> SignupOtpRepository:
+    return SignupOtpRepository(db)
+
+
+def get_sms_service() -> SmsService:
+    return SmsService()
+
+
+def get_signup_otp_service(
+    otp_repo: SignupOtpRepository = Depends(get_signup_otp_repository),
+    user_repo: UserRepository = Depends(get_user_repository),
+    sms_service: SmsService = Depends(get_sms_service),
+) -> SignupOtpService:
+    return SignupOtpService(otp_repo, user_repo, sms_service)
+
+
+def get_user_bank_account_repository(
+    db: AsyncSession = Depends(get_db_session),
+) -> UserBankAccountRepository:
+    return UserBankAccountRepository(db)
+
+
+def get_bank_link_challenge_repository(
+    db: AsyncSession = Depends(get_db_session),
+) -> BankLinkChallengeRepository:
+    return BankLinkChallengeRepository(db)
+
+
+def get_ifsc_service() -> IfscService:
+    return IfscService()
+
+
+def get_bank_account_service(
+    bank_repo: UserBankAccountRepository = Depends(get_user_bank_account_repository),
+    challenge_repo: BankLinkChallengeRepository = Depends(
+        get_bank_link_challenge_repository
+    ),
+    sms_service: SmsService = Depends(get_sms_service),
+    ifsc_service: IfscService = Depends(get_ifsc_service),
+) -> BankAccountService:
+    return BankAccountService(bank_repo, challenge_repo, sms_service, ifsc_service)
 
 
 def get_profile_service(
@@ -315,6 +395,24 @@ def get_executive_dashboard_service(
     )
 
 
+def get_personal_dashboard_service(
+    audit_service: AuditService = Depends(get_audit_service),
+    notification_service: NotificationService = Depends(get_notification_service),
+    workflow_repo: WorkflowRepository = Depends(get_workflow_repository),
+) -> PersonalDashboardService:
+    """Dependency injecting the PersonalDashboardService."""
+    return PersonalDashboardService(
+        audit_service,
+        notification_service,
+        workflow_repo,
+    )
+
+
+def get_metal_price_service() -> MetalPriceService:
+    """Dependency injecting the MetalPriceService."""
+    return MetalPriceService()
+
+
 def get_dashboard_service(
     audit_service: AuditService = Depends(get_audit_service),
     notification_service: NotificationService = Depends(get_notification_service),
@@ -325,3 +423,57 @@ def get_dashboard_service(
     return DashboardService(
         audit_service, notification_service, inventory_service, transaction_service
     )
+
+
+def get_sandbox_kyc_client() -> SandboxKycClient:
+    """Dependency injecting the Sandbox KYC API client."""
+    return SandboxKycClient()
+
+
+def get_kyc_service(
+    user_repo: UserRepository = Depends(get_user_repository),
+    sandbox_client: SandboxKycClient = Depends(get_sandbox_kyc_client),
+    audit_service: AuditService = Depends(get_audit_service),
+) -> KycService:
+    """Dependency injecting the KycService."""
+    return KycService(user_repo, sandbox_client, audit_service)
+
+
+def get_payment_order_repository(
+    db: AsyncSession = Depends(get_db_session),
+) -> PaymentOrderRepository:
+    return PaymentOrderRepository(db)
+
+
+def get_razorpay_client() -> RazorpayClient:
+    return RazorpayClient()
+
+
+def get_gold_payment_service(
+    user_repo: UserRepository = Depends(get_user_repository),
+    payment_repo: PaymentOrderRepository = Depends(get_payment_order_repository),
+    metal_prices: MetalPriceService = Depends(get_metal_price_service),
+    razorpay: RazorpayClient = Depends(get_razorpay_client),
+) -> GoldPaymentService:
+    return GoldPaymentService(user_repo, payment_repo, metal_prices, razorpay)
+
+
+def get_gold_scheme_service(
+    user_repo: UserRepository = Depends(get_user_repository),
+    referral_service: ReferralService = Depends(get_referral_service),
+) -> GoldSchemeService:
+    return GoldSchemeService(user_repo, referral_service)
+
+
+def get_gold_sell_inquiry_repository(
+    db: AsyncSession = Depends(get_db_session),
+) -> GoldSellInquiryRepository:
+    return GoldSellInquiryRepository(db)
+
+
+def get_gold_sell_inquiry_service(
+    inquiry_repo: GoldSellInquiryRepository = Depends(get_gold_sell_inquiry_repository),
+    user_repo: UserRepository = Depends(get_user_repository),
+    notification_service: NotificationService = Depends(get_notification_service),
+) -> GoldSellInquiryService:
+    return GoldSellInquiryService(inquiry_repo, user_repo, notification_service)

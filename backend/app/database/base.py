@@ -19,3 +19,8 @@ from app.models.workflow import (  # noqa: F401
     WorkflowEscalationRule,
     WorkflowRequest,
 )
+from app.models.payment_order import PaymentOrder  # noqa: F401
+from app.models.signup_otp import SignupOtpChallenge  # noqa: F401
+from app.models.bank_account import BankLinkChallenge, UserBankAccount  # noqa: F401
+from app.models.referral_reward import ReferralReward  # noqa: F401
+from app.models.gold_sell_inquiry import GoldSellInquiry  # noqa: F401

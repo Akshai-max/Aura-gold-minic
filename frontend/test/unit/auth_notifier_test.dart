@@ -105,7 +105,10 @@ void main() {
         await tester.pump(const Duration(seconds: 2));
 
         final notifier = container.read(authNotifierProvider.notifier);
-        final future = notifier.login('test@example.com', 'password123');
+        final future = notifier.login(
+          email: 'test@example.com',
+          password: 'password123',
+        );
 
         // State transition to loading during login
         expect(
@@ -155,7 +158,7 @@ void main() {
       final notifier = container.read(authNotifierProvider.notifier);
 
       expect(
-        () => notifier.login('wrong@example.com', 'badpassword'),
+        () => notifier.login(email: 'wrong@example.com', password: 'badpassword'),
         throwsA(isA<UnauthorizedException>()),
       );
 

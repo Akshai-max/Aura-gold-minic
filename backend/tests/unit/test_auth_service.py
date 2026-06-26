@@ -118,7 +118,9 @@ async def test_authenticate_user_success(auth_service, mock_user_repository):
 
     mock_user_repository.get_by_email = AsyncMock(return_value=user)
 
-    result = await auth_service.authenticate_user("test@example.com", password)
+    result = await auth_service.authenticate_user(
+        password=password, email="test@example.com"
+    )
     assert result == user
     mock_user_repository.get_by_email.assert_called_once_with("test@example.com")
 
@@ -129,7 +131,9 @@ async def test_authenticate_user_invalid_email(auth_service, mock_user_repositor
     mock_user_repository.get_by_email = AsyncMock(return_value=None)
 
     with pytest.raises(AuthenticationException) as exc_info:
-        await auth_service.authenticate_user("nonexistent@example.com", "password")
+        await auth_service.authenticate_user(
+            password="password", email="nonexistent@example.com"
+        )
 
     assert "incorrect email or password" in str(exc_info.value).lower()
 
@@ -147,7 +151,9 @@ async def test_authenticate_user_wrong_password(auth_service, mock_user_reposito
     mock_user_repository.get_by_email = AsyncMock(return_value=user)
 
     with pytest.raises(AuthenticationException) as exc_info:
-        await auth_service.authenticate_user("test@example.com", "wrong_password")
+        await auth_service.authenticate_user(
+            password="wrong_password", email="test@example.com"
+        )
 
     assert "incorrect email or password" in str(exc_info.value).lower()
 
@@ -165,7 +171,9 @@ async def test_authenticate_user_inactive(auth_service, mock_user_repository):
     mock_user_repository.get_by_email = AsyncMock(return_value=user)
 
     with pytest.raises(AuthenticationException) as exc_info:
-        await auth_service.authenticate_user("test@example.com", "password123")
+        await auth_service.authenticate_user(
+            password="password123", email="test@example.com"
+        )
 
     assert "incorrect email or password" in str(exc_info.value).lower()
 

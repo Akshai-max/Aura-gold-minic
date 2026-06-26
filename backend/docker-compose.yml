@@ -35,6 +35,16 @@ services:
       - POSTGRES_DB=ags_gold_db
       - POSTGRES_PORT=5432
       - DATABASE_URL=postgresql+asyncpg://postgres:password123@db:5432/ags_gold_db
+      # MSG91 + OTP: loaded from env_file (.env) only — avoids stale overrides
+      - API_NINJAS_KEY=${API_NINJAS_KEY:-}
+      - GOLDAPI_KEY=${GOLDAPI_KEY:-}
+      - METALPRICEAPI_KEY=${METALPRICEAPI_KEY:-}
+      - RAZORPAY_KEY_ID=${RAZORPAY_KEY_ID:-}
+      - RAZORPAY_KEY_SECRET=${RAZORPAY_KEY_SECRET:-}
+      - RAZORPAY_CURRENCY=${RAZORPAY_CURRENCY:-INR}
+      - PAYMENT_DEV_MOCK=${PAYMENT_DEV_MOCK:-true}
+    env_file:
+      - .env
     depends_on:
       db:
         condition: service_healthy

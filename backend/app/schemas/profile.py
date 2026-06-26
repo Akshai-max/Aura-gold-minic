@@ -73,3 +73,76 @@ class ProfileResponse(BaseModel):
 class ProfileActivityResponse(BaseModel):
     items: List[AuditLogResponse]
     total: int
+
+
+class AadhaarOtpRequest(BaseModel):
+    aadhaar_number: str = Field(..., min_length=12, max_length=14)
+
+    @field_validator("aadhaar_number")
+    @classmethod
+    def validate_aadhaar(cls, v: str) -> str:
+        digits = re.sub(r"\D", "", v)
+        if len(digits) != 12:
+            raise ValueError("Enter a valid 12-digit Aadhaar number")
+        return digits
+
+
+class AadhaarOtpResponse(BaseModel):
+    reference_id: str
+    message: str = "OTP sent to your Aadhaar-linked mobile number."
+    registered_mobile_masked: Optional[str] = None
+
+
+class AadhaarVerifyRequest(BaseModel):
+    reference_id: str
+    otp: str = Field(..., min_length=6, max_length=6)
+    aadhaar_number: str = Field(..., min_length=12, max_length=14)
+
+    @field_validator("aadhaar_number")
+    @classmethod
+    def validate_aadhaar(cls, v: str) -> str:
+        digits = re.sub(r"\D", "", v)
+        if len(digits) != 12:
+            raise ValueError("Enter a valid 12-digit Aadhaar number")
+        return digits
+
+
+class PanLinkVerifyRequest(BaseModel):
+    pan_number: str = Field(..., min_length=10, max_length=10)
+
+    @field_validator("pan_number")
+    @classmethod
+    def validate_pan(cls, v: str) -> str:
+        normalized = v.strip().upper()
+        if not re.match(r"^[A-Z]{5}[0-9]{4}[A-Z]$", normalized):
+            raise ValueError("Enter a valid PAN number (e.g. ABCDE1234F)")
+        return normalized
+
+
+class KycGovernmentProfile(BaseModel):
+    full_name: Optional[str] = None
+    date_of_birth: Optional[str] = None
+    gender: Optional[str] = None
+    care_of: Optional[str] = None
+    full_address: Optional[str] = None
+    state: Optional[str] = None
+    district: Optional[str] = None
+    pincode: Optional[str] = None
+    aadhaar_last4: Optional[str] = None
+    aadhaar_linked_mobile_masked: Optional[str] = None
+    pan_number_masked: Optional[str] = None
+    pan_category: Optional[str] = None
+    pan_status: Optional[str] = None
+    name_as_per_pan_match: Optional[bool] = None
+    date_of_birth_match: Optional[bool] = None
+    aadhaar_seeding_status: Optional[str] = None
+    verified_at: Optional[str] = None
+
+
+class KycStatusResponse(BaseModel):
+    kyc_status: str
+    aadhaar_last4: Optional[str] = None
+    pan_last4: Optional[str] = None
+    registered_mobile_masked: Optional[str] = None
+    message: Optional[str] = None
+    profile: Optional[KycGovernmentProfile] = None

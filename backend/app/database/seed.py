@@ -172,11 +172,7 @@ async def seed_data(session: AsyncSession) -> None:
         if perm not in admin_role.permissions:
             admin_role.permissions.append(perm)
 
-    user_role = db_roles["user"]
-    for perm_name in ["user.view", "user:read", "dashboard.view"]:
-        perm = db_permissions[perm_name]
-        if perm not in user_role.permissions:
-            user_role.permissions.append(perm)
+    # End-user role intentionally has no staff permissions.
 
     manager_role = db_roles["manager"]
     for perm_name in [
@@ -228,6 +224,7 @@ async def seed_data(session: AsyncSession) -> None:
             is_superuser=True,
             first_name="Super",
             last_name="Admin",
+            kyc_status="verified",
             roles=[],
         )
         admin_user.roles.append(super_admin_role)
@@ -237,6 +234,7 @@ async def seed_data(session: AsyncSession) -> None:
         admin_user.hashed_password = hashed_pw
         admin_user.is_active = True
         admin_user.is_superuser = True
+        admin_user.kyc_status = "verified"
         if super_admin_role not in admin_user.roles:
             admin_user.roles.append(super_admin_role)
         logger.info("super_admin_user_updated", email=admin_email)

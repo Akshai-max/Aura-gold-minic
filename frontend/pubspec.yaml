@@ -18,6 +18,7 @@ dependencies:
   image_picker: ^1.1.2
   shared_preferences: ^2.5.3
   intl: ^0.20.2
+  razorpay_flutter: ^1.4.0
 
 dev_dependencies:
   flutter_test:
@@ -29,4 +30,5 @@ dev_dependencies:
   http_mock_adapter: ^0.6.1
 
 flutter:
+  generate: true
   uses-material-design: true

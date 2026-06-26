@@ -1,12 +1,28 @@
 import json
+from pathlib import Path
 from typing import Any, List, Union
 from pydantic import field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+_BACKEND_ROOT = Path(__file__).resolve().parents[2]
+
+
+def normalize_database_url(url: str) -> str:
+    """Railway/Heroku provide postgresql:// — SQLAlchemy async needs postgresql+asyncpg://."""
+    if not url:
+        return url
+    if url.startswith("postgres://"):
+        url = "postgresql://" + url[len("postgres://") :]
+    if url.startswith("postgresql://") and "+asyncpg" not in url.split("://", 1)[0]:
+        url = url.replace("postgresql://", "postgresql+asyncpg://", 1)
+    return url
+
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
-        env_file=".env", env_ignore_empty=True, extra="ignore"
+        env_file=_BACKEND_ROOT / ".env",
+        env_ignore_empty=True,
+        extra="ignore",
     )
 
     ENVIRONMENT: str = "development"
@@ -32,6 +48,71 @@ class Settings(BaseSettings):
     AUDIT_EXPORT_MAX_ROWS: int = 5000
     REPORT_EXPORT_MAX_ROWS: int = 5000
     REPORT_ANALYTICS_CACHE_TTL_SECONDS: int = 30
+
+    # Sandbox KYC (Aadhaar OTP + PAN linking) — set in .env, never commit secrets
+    SANDBOX_API_KEY: str = ""
+    SANDBOX_API_SECRET: str = ""
+    SANDBOX_BASE_URL: str = "https://api.sandbox.co.in"
+    SANDBOX_API_VERSION: str = "1.0.0"
+    KYC_VERIFICATION_REASON: str = "AURUM gold trading KYC verification"
+
+    # Live metal price providers (set in .env — never commit real keys)
+    API_NINJAS_KEY: str = ""
+    API_NINJAS_BASE_URL: str = "https://api.api-ninjas.com/v1"
+    COMMODITY_PRICE_API_KEY: str = ""
+    COMMODITY_PRICE_API_BASE_URL: str = "https://api.commoditypriceapi.com/v2"
+    GOLDAPI_KEY: str = ""
+    # Gold Price API dashboard keys (hex) use https://api.gold-api.com; legacy keys use goldapi.io
+    GOLD_API_BASE_URL: str = "https://api.gold-api.com"
+    METALPRICEAPI_KEY: str = ""
+    METALPRICEAPI_BASE_URL: str = "https://api.metalpriceapi.com"
+    METAL_PRICES_CACHE_TTL_SECONDS: int = 60
+    METAL_HISTORY_CACHE_TTL_SECONDS: int = 21600
+
+    # India customer buy-rate (GoldAPI spot + GST + platform spread — like digital gold apps)
+    METAL_GOLD_BUY_SPREAD_PERCENT: float = 14.5
+    METAL_SILVER_BUY_SPREAD_PERCENT: float = 12.0
+    METAL_GOLD_IMPORT_DUTY_PERCENT: float = 6.0
+    METAL_GOLD_GST_PERCENT: float = 3.0
+    METAL_SILVER_IMPORT_DUTY_PERCENT: float = 10.0
+    METAL_SILVER_GST_PERCENT: float = 3.0
+    METAL_TN_JEWELLER_PREMIUM_PERCENT: float = 1.25
+    # SLN Bullion (slnbullion.in) GOLD CBE 9999 T+1 parity on international INR/gram
+    METAL_GOLD_TN_BULLION_MARKUP_PERCENT: float = 19.2
+    # SLN Chennai silver T+1 (₹/kg) parity on international INR/gram
+    METAL_SILVER_TN_BULLION_MARKUP_PERCENT: float = 28.6
+
+    # Signup SMS OTP (MSG91 v5 OTP template — AurumGoldSilvers_OTP_v2)
+    MSG91_AUTH_KEY: str = ""
+    MSG91_OTP_URL: str = "https://control.msg91.com/api/v5/otp"
+    MSG91_OTP_TEMPLATE_ID: str = "6a3a73a1a51ea2ee050db8b6"
+    # Flow API uses a different ID than OTP API — copy from MSG91 → Templates (not SendOTP)
+    MSG91_FLOW_ID: str = ""
+    MSG91_SEND_URL: str = "https://api.msg91.com/api/sendhttp.php"
+    # Comma-separated fallback order: otp, flow, sendotp, sendhttp
+    MSG91_SMS_CHANNELS: str = "otp"
+    MSG91_DLT_TE_ID: str = ""
+    MSG91_DLT_TEMPLATE_ID: str = ""
+    SMS_SENDER_ID: str = "AURUS"
+    SMS_ROUTE: str = "4"
+    SIGNUP_OTP_LENGTH: int = 6
+    SIGNUP_OTP_EXPIRE_MINUTES: int = 10
+    SIGNUP_OTP_MAX_ATTEMPTS: int = 5
+    SIGNUP_OTP_MAX_SENDS_PER_HOUR: int = 10
+    SIGNUP_OTP_MIN_RESEND_SECONDS: int = 60
+    SIGNUP_OTP_SEND_COOLDOWN_HOURS: int = 1
+    SIGNUP_OTP_USE_MSG91_VERIFY: bool = True
+
+    # Razorpay — set in .env, never commit secrets
+    RAZORPAY_KEY_ID: str = ""
+    RAZORPAY_KEY_SECRET: str = ""
+    RAZORPAY_WEBHOOK_SECRET: str = ""
+    RAZORPAY_CURRENCY: str = "INR"
+    # Domestic card/UPI fee estimate used for merchant settlement ledger (2% + 18% GST on fee).
+    RAZORPAY_PLATFORM_FEE_PERCENT: float = 2.0
+    RAZORPAY_PLATFORM_FEE_GST_PERCENT: float = 18.0
+    # When true (default in development), simulate checkout if Razorpay keys are unset
+    PAYMENT_DEV_MOCK: bool = True
 
     # CORS Origins
     BACKEND_CORS_ORIGINS: Union[List[str], str] = []
@@ -61,17 +142,27 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def assemble_db_url(self) -> "Settings":
-        if not self.DATABASE_URL:
-            self.DATABASE_URL = f"postgresql+asyncpg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_SERVER}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
+        if self.DATABASE_URL:
+            self.DATABASE_URL = normalize_database_url(self.DATABASE_URL)
+        else:
+            self.DATABASE_URL = (
+                f"postgresql+asyncpg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}"
+                f"@{self.POSTGRES_SERVER}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
+            )
 
         # Enforce production security constraints
         if self.ENVIRONMENT == "production":
             if self.SECRET_KEY == "secret-key-change-me":
                 raise ValueError("SECRET_KEY must be overridden in production mode!")
-            if self.POSTGRES_PASSWORD == "password123":
+            if (
+                not self.DATABASE_URL
+                and self.POSTGRES_PASSWORD == "password123"
+            ):
                 raise ValueError(
                     "POSTGRES_PASSWORD must be overridden in production mode!"
                 )
+            if self.TRUSTED_PROXY is False:
+                self.TRUSTED_PROXY = True
 
         return self
 

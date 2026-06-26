@@ -173,170 +173,21 @@ class _UsersScreenState extends ConsumerState<UsersScreen> {
             Card(
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  children: [
-                    // First line: Search & Role Filter
-                    Row(
-                      children: [
-                        Expanded(
-                          flex: 3,
-                          child: TextField(
-                            controller: _searchController,
-                            decoration: InputDecoration(
-                              labelText: 'Search Operators',
-                              hintText: 'Search email, first or last name...',
-                              prefixIcon: const Icon(Icons.search),
-                              suffixIcon: search.isNotEmpty
-                                  ? IconButton(
-                                      icon: const Icon(Icons.clear),
-                                      onPressed: () {
-                                        _searchController.clear();
-                                        ref
-                                                .read(
-                                                  usersSearchQueryProvider
-                                                      .notifier,
-                                                )
-                                                .state =
-                                            '';
-                                      },
-                                    )
-                                  : null,
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 12,
-                              ),
-                            ),
-                            onSubmitted: (val) {
-                              ref
-                                      .read(usersSearchQueryProvider.notifier)
-                                      .state =
-                                  val;
-                            },
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          flex: 2,
-                          child: rolesAsync.when(
-                            data: (rolesList) {
-                              return DropdownButtonFormField<String?>(
-                                initialValue: roleId,
-                                decoration: const InputDecoration(
-                                  labelText: 'Role',
-                                  contentPadding: EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                    vertical: 8,
-                                  ),
-                                ),
-                                items: [
-                                  const DropdownMenuItem(
-                                    value: null,
-                                    child: Text('All Roles'),
-                                  ),
-                                  ...rolesList.map(
-                                    (r) => DropdownMenuItem(
-                                      value: r['id'] as String,
-                                      child: Text(
-                                        (r['name'] as String).toUpperCase(),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                                onChanged: (val) {
-                                  ref
-                                          .read(
-                                            usersRoleIdFilterProvider.notifier,
-                                          )
-                                          .state =
-                                      val;
-                                },
-                              );
-                            },
-                            loading: () => const Center(
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            ),
-                            error: (err, stack) => const SizedBox(),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    // Second line: Status filters
-                    Row(
-                      children: [
-                        Expanded(
-                          child: DropdownButtonFormField<bool?>(
-                            initialValue: isActive,
-                            decoration: const InputDecoration(
-                              labelText: 'Active Status',
-                              contentPadding: EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 8,
-                              ),
-                            ),
-                            items: const [
-                              DropdownMenuItem(
-                                value: null,
-                                child: Text('All Statuses'),
-                              ),
-                              DropdownMenuItem(
-                                value: true,
-                                child: Text('Active Only'),
-                              ),
-                              DropdownMenuItem(
-                                value: false,
-                                child: Text('Inactive Only'),
-                              ),
-                            ],
-                            onChanged: (val) {
-                              ref
-                                      .read(
-                                        usersIsActiveFilterProvider.notifier,
-                                      )
-                                      .state =
-                                  val;
-                            },
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: DropdownButtonFormField<bool?>(
-                            initialValue: isSuperuser,
-                            decoration: const InputDecoration(
-                              labelText: 'Account Level',
-                              contentPadding: EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 8,
-                              ),
-                            ),
-                            items: const [
-                              DropdownMenuItem(
-                                value: null,
-                                child: Text('All Levels'),
-                              ),
-                              DropdownMenuItem(
-                                value: true,
-                                child: Text('Superusers Only'),
-                              ),
-                              DropdownMenuItem(
-                                value: false,
-                                child: Text('Standard Users Only'),
-                              ),
-                            ],
-                            onChanged: (val) {
-                              ref
-                                      .read(
-                                        usersIsSuperuserFilterProvider.notifier,
-                                      )
-                                      .state =
-                                  val;
-                            },
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
+                child: isDesktop
+                    ? _buildDesktopFilters(
+                        search: search,
+                        isActive: isActive,
+                        isSuperuser: isSuperuser,
+                        roleId: roleId,
+                        rolesAsync: rolesAsync,
+                      )
+                    : _buildMobileFilters(
+                        search: search,
+                        isActive: isActive,
+                        isSuperuser: isSuperuser,
+                        roleId: roleId,
+                        rolesAsync: rolesAsync,
+                      ),
               ),
             ),
             const SizedBox(height: 24),
@@ -395,6 +246,151 @@ class _UsersScreenState extends ConsumerState<UsersScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildSearchField(String search) {
+    return TextField(
+      controller: _searchController,
+      decoration: InputDecoration(
+        labelText: 'Search Operators',
+        hintText: 'Search email, first or last name...',
+        prefixIcon: const Icon(Icons.search),
+        suffixIcon: search.isNotEmpty
+            ? IconButton(
+                icon: const Icon(Icons.clear),
+                onPressed: () {
+                  _searchController.clear();
+                  ref.read(usersSearchQueryProvider.notifier).state = '';
+                },
+              )
+            : null,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      ),
+      onSubmitted: (val) {
+        ref.read(usersSearchQueryProvider.notifier).state = val;
+      },
+    );
+  }
+
+  Widget _buildRoleFilter(
+    AsyncValue<List<dynamic>> rolesAsync,
+    String? roleId,
+  ) {
+    return rolesAsync.when(
+      data: (rolesList) {
+        return DropdownButtonFormField<String?>(
+          initialValue: roleId,
+          decoration: const InputDecoration(
+            labelText: 'Role',
+            contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          ),
+          items: [
+            const DropdownMenuItem(value: null, child: Text('All Roles')),
+            ...rolesList.map(
+              (r) => DropdownMenuItem(
+                value: r['id'] as String,
+                child: Text((r['name'] as String).toUpperCase()),
+              ),
+            ),
+          ],
+          onChanged: (val) {
+            ref.read(usersRoleIdFilterProvider.notifier).state = val;
+          },
+        );
+      },
+      loading: () => const SizedBox(
+        height: 56,
+        child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+      ),
+      error: (err, stack) => const SizedBox.shrink(),
+    );
+  }
+
+  Widget _buildActiveFilter(bool? isActive) {
+    return DropdownButtonFormField<bool?>(
+      initialValue: isActive,
+      decoration: const InputDecoration(
+        labelText: 'Active Status',
+        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      ),
+      items: const [
+        DropdownMenuItem(value: null, child: Text('All Statuses')),
+        DropdownMenuItem(value: true, child: Text('Active Only')),
+        DropdownMenuItem(value: false, child: Text('Inactive Only')),
+      ],
+      onChanged: (val) {
+        ref.read(usersIsActiveFilterProvider.notifier).state = val;
+      },
+    );
+  }
+
+  Widget _buildSuperuserFilter(bool? isSuperuser) {
+    return DropdownButtonFormField<bool?>(
+      initialValue: isSuperuser,
+      decoration: const InputDecoration(
+        labelText: 'Account Level',
+        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      ),
+      items: const [
+        DropdownMenuItem(value: null, child: Text('All Levels')),
+        DropdownMenuItem(value: true, child: Text('Superusers Only')),
+        DropdownMenuItem(value: false, child: Text('Standard Users Only')),
+      ],
+      onChanged: (val) {
+        ref.read(usersIsSuperuserFilterProvider.notifier).state = val;
+      },
+    );
+  }
+
+  Widget _buildDesktopFilters({
+    required String search,
+    required bool? isActive,
+    required bool? isSuperuser,
+    required String? roleId,
+    required AsyncValue<List<dynamic>> rolesAsync,
+  }) {
+    return Column(
+      children: [
+        Row(
+          children: [
+            Expanded(flex: 3, child: _buildSearchField(search)),
+            const SizedBox(width: 16),
+            Expanded(
+              flex: 2,
+              child: _buildRoleFilter(rolesAsync, roleId),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        Row(
+          children: [
+            Expanded(child: _buildActiveFilter(isActive)),
+            const SizedBox(width: 16),
+            Expanded(child: _buildSuperuserFilter(isSuperuser)),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMobileFilters({
+    required String search,
+    required bool? isActive,
+    required bool? isSuperuser,
+    required String? roleId,
+    required AsyncValue<List<dynamic>> rolesAsync,
+  }) {
+    return Column(
+      children: [
+        _buildSearchField(search),
+        const SizedBox(height: 16),
+        _buildRoleFilter(rolesAsync, roleId),
+        const SizedBox(height: 16),
+        _buildActiveFilter(isActive),
+        const SizedBox(height: 16),
+        _buildSuperuserFilter(isSuperuser),
+      ],
     );
   }
 

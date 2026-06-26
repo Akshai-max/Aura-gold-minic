@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:ags_gold/features/auth/domain/app_audience.dart';
+import 'package:ags_gold/features/auth/presentation/providers/app_audience_provider.dart';
 import 'package:ags_gold/services/service_providers.dart';
 import 'package:ags_gold/core/theme/app_theme.dart';
+import 'package:ags_gold/core/theme/aurum_consumer_theme.dart';
 import 'package:ags_gold/core/responsive/responsive_layout.dart';
 import 'package:ags_gold/core/navigation/app_nav_destinations.dart';
 import 'package:ags_gold/features/notifications/presentation/notification_drawer.dart';
+import 'package:ags_gold/features/user_dashboard/presentation/widgets/live_price_app_bar_chip.dart';
+import 'package:ags_gold/l10n/l10n_extension.dart';
 
 class ResponsiveNavigationWrapper extends ConsumerWidget {
   final Widget child;
@@ -18,17 +23,16 @@ class ResponsiveNavigationWrapper extends ConsumerWidget {
   });
 
   void _handleLogout(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Log Out'),
-        content: const Text(
-          'Are you sure you want to end your current session?',
-        ),
+        title: Text(l10n.logOutConfirmTitle),
+        content: Text(l10n.logOutConfirmMessage),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Text(l10n.cancel),
           ),
           TextButton(
             onPressed: () {
@@ -36,7 +40,7 @@ class ResponsiveNavigationWrapper extends ConsumerWidget {
               ref.read(authNotifierProvider.notifier).logout();
             },
             style: TextButton.styleFrom(foregroundColor: Colors.redAccent),
-            child: const Text('Log Out'),
+            child: Text(l10n.logOut),
           ),
         ],
       ),
@@ -50,7 +54,13 @@ class ResponsiveNavigationWrapper extends ConsumerWidget {
     final theme = Theme.of(context);
     final isDesktop = ResponsiveLayout.isDesktop(context);
     final profile = ref.watch(profileProvider).value;
-    final destinations = buildNavDestinations(profile);
+    final audience = ref.watch(appAudienceProvider);
+    final l10n = context.l10n;
+    final destinations = buildNavDestinations(
+      profile,
+      audience: audience,
+      l10n: l10n,
+    );
     final selectedIndex = selectedNavIndexForPath(currentPath, destinations);
 
     if (isDesktop) {
@@ -105,29 +115,9 @@ class ResponsiveNavigationWrapper extends ConsumerWidget {
                   ),
                   elevation: 0,
                   actions: [
+                    if (audience == AppAudience.endUser)
+                      const LivePriceAppBarChip(),
                     const NotificationBellButton(),
-                    Consumer(
-                      builder: (context, ref, child) {
-                        final isDark =
-                            Theme.of(context).brightness == Brightness.dark;
-                        return IconButton(
-                          icon: Icon(
-                            isDark
-                                ? Icons.light_mode_outlined
-                                : Icons.dark_mode_outlined,
-                          ),
-                          onPressed: () => ref
-                              .read(themeModeProvider.notifier)
-                              .toggleTheme(context),
-                          tooltip: 'Toggle Theme',
-                        );
-                      },
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.logout),
-                      onPressed: () => _handleLogout(context, ref),
-                      tooltip: 'Log Out',
-                    ),
                   ],
                 ),
                 body: child,
@@ -138,30 +128,43 @@ class ResponsiveNavigationWrapper extends ConsumerWidget {
       );
     }
 
-    return Scaffold(
+    final isEndUserMobile = audience == AppAudience.endUser;
+    final endUserDestinations = isEndUserMobile
+        ? destinations
+            .where(
+              (d) =>
+                  d.routePrefix == '/user-dashboard' ||
+                  d.routePrefix == '/profile',
+            )
+            .toList()
+        : <AppNavDestination>[];
+    final endUserNavIndex = isEndUserMobile
+        ? selectedNavIndexForPath(currentPath, endUserDestinations)
+        : 0;
+
+    return Theme(
+      data: isEndUserMobile ? AurumConsumerTheme.theme() : theme,
+      child: Scaffold(
+      backgroundColor:
+          isEndUserMobile ? AurumConsumerTheme.background : null,
       endDrawer: const NotificationDrawer(),
       appBar: AppBar(
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+        automaticallyImplyLeading: !isEndUserMobile,
+        title: Text(
+          title,
+          style: TextStyle(
+            fontWeight: FontWeight.w800,
+            letterSpacing: isEndUserMobile ? 0.5 : 0,
+          ),
+        ),
         actions: [
+          if (audience == AppAudience.endUser) const LivePriceAppBarChip(),
           const NotificationBellButton(),
-          Consumer(
-            builder: (context, ref, child) {
-              final isDark = Theme.of(context).brightness == Brightness.dark;
-              return IconButton(
-                icon: Icon(isDark ? Icons.light_mode : Icons.dark_mode),
-                onPressed: () =>
-                    ref.read(themeModeProvider.notifier).toggleTheme(context),
-                tooltip: 'Toggle Theme',
-              );
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () => _handleLogout(context, ref),
-          ),
         ],
       ),
-      drawer: Drawer(
+      drawer: isEndUserMobile
+          ? null
+          : Drawer(
         child: Column(
           children: [
             Consumer(
@@ -250,7 +253,116 @@ class ResponsiveNavigationWrapper extends ConsumerWidget {
           ],
         ),
       ),
+      bottomNavigationBar: isEndUserMobile
+          ? _EndUserBottomNav(
+              destinations: endUserDestinations,
+              currentIndex: endUserNavIndex,
+            )
+          : null,
       body: child,
+    ),
+    );
+  }
+}
+
+class _EndUserBottomNav extends StatelessWidget {
+  final List<AppNavDestination> destinations;
+  final int currentIndex;
+
+  const _EndUserBottomNav({
+    required this.destinations,
+    required this.currentIndex,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+
+    return Container(
+      decoration: const BoxDecoration(
+        border: Border(top: BorderSide(color: AurumConsumerTheme.border)),
+      ),
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _NavItem(
+                label: l10n.navHome,
+                icon: Icons.home_outlined,
+                selectedIcon: Icons.home_rounded,
+                selected: currentIndex == 0,
+                onTap: () => navigateToIndex(context, 0, destinations),
+              ),
+              _NavItem(
+                label: l10n.navProfile,
+                icon: Icons.person_outline,
+                selectedIcon: Icons.person_rounded,
+                selected: currentIndex == 1,
+                onTap: () => navigateToIndex(context, 1, destinations),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _NavItem extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final IconData selectedIcon;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _NavItem({
+    required this.label,
+    required this.icon,
+    required this.selectedIcon,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    const activeBlue = Color(0xFF60A5FA);
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(20),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+              decoration: selected
+                  ? BoxDecoration(
+                      color: activeBlue.withValues(alpha: 0.18),
+                      borderRadius: BorderRadius.circular(20),
+                    )
+                  : null,
+              child: Icon(
+                selected ? selectedIcon : icon,
+                color: selected ? activeBlue : AurumConsumerTheme.textMuted,
+                size: 22,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(
+                color: selected ? activeBlue : AurumConsumerTheme.textMuted,
+                fontSize: 12,
+                fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

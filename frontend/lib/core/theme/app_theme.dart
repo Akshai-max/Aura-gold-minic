@@ -8,8 +8,11 @@ class AppTheme {
   static const Color sapphireBlue = Color(0xFF2563EB);
   static const Color amber = Color(0xFFF59E0B);
   static const Color rose = Color(0xFFF43F5E);
+  static const Color auraPurple = Color(0xFF7C3AED);
+  static const Color profileMuted = Color(0xFF6B7280);
 
   static const Color lightBg = Color(0xFFF8FAFC);
+  static const Color profileBg = Color(0xFFF3F4F6);
   static const Color lightSurf = Color(0xFFFFFFFF);
   static const Color darkBg = Color(0xFF0B0F19);
   static const Color darkSurf = Color(0xFF1E293B);

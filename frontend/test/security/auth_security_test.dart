@@ -36,7 +36,7 @@ void main() {
 
         final notifier = container.read(authNotifierProvider.notifier);
         await expectLater(
-          notifier.login('wrong@example.com', 'badpassword1'),
+          notifier.login(email: 'wrong@example.com', password: 'badpassword1'),
           throwsA(isA<UnauthorizedException>()),
         );
 

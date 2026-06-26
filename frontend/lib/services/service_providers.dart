@@ -22,25 +22,101 @@ class AuthNotifier extends AsyncNotifier<AuthStatus> {
     return hasToken ? AuthStatus.authenticated : AuthStatus.unauthenticated;
   }
 
-  Future<void> login(String email, String password) async {
+  Future<void> login({
+    String? email,
+    String? mobileNumber,
+    required String password,
+  }) async {
     state = const AsyncValue.loading();
     try {
       final apiClient = ref.read(apiClientProvider);
-      final response = await apiClient.post(
-        '/auth/login',
-        data: {'email': email, 'password': password},
-      );
+      final data = <String, dynamic>{'password': password};
+      if (mobileNumber != null && mobileNumber.isNotEmpty) {
+        data['mobile_number'] = mobileNumber;
+      } else if (email != null) {
+        data['email'] = email;
+      }
+      final response = await apiClient.post('/auth/login', data: data);
 
-      final data = response.data as Map<String, dynamic>;
+      final responseData = response.data as Map<String, dynamic>;
       await _storage.saveTokens(
-        accessToken: data['access_token'] as String,
-        refreshToken: data['refresh_token'] as String,
+        accessToken: responseData['access_token'] as String,
+        refreshToken: responseData['refresh_token'] as String,
       );
       state = const AsyncValue.data(AuthStatus.authenticated);
     } catch (e, st) {
       state = AsyncValue.error(e, st);
       rethrow;
     }
+  }
+
+  Future<void> sendSignupOtp(String mobileNumber) async {
+    final apiClient = ref.read(apiClientProvider);
+    await apiClient.post(
+      '/auth/signup/otp/send',
+      data: {'mobile_number': mobileNumber},
+    );
+  }
+
+  Future<void> loginWithMobile(String mobileNumber) async {
+    state = const AsyncValue.loading();
+    try {
+      final apiClient = ref.read(apiClientProvider);
+      final response = await apiClient.post(
+        '/auth/login/mobile',
+        data: {'mobile_number': mobileNumber},
+      );
+
+      final responseData = response.data as Map<String, dynamic>;
+      await _storage.saveTokens(
+        accessToken: responseData['access_token'] as String,
+        refreshToken: responseData['refresh_token'] as String,
+      );
+      state = const AsyncValue.data(AuthStatus.authenticated);
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+      rethrow;
+    }
+  }
+
+  Future<void> verifySignupOtp({
+    required String mobileNumber,
+    required String otp,
+  }) async {
+    final apiClient = ref.read(apiClientProvider);
+    await apiClient.post(
+      '/auth/signup/otp/verify',
+      data: {
+        'mobile_number': mobileNumber,
+        'otp': otp,
+      },
+    );
+  }
+
+  Future<void> register({
+    required String name,
+    required String mobileNumber,
+    required String otp,
+    required String email,
+    required String password,
+    String? referralCode,
+    int? referralSchemeGrams,
+  }) async {
+    final apiClient = ref.read(apiClientProvider);
+    await apiClient.post(
+      '/auth/register',
+      data: {
+        'name': name,
+        'mobile_number': mobileNumber,
+        'otp': otp,
+        'email': email,
+        'password': password,
+        if (referralCode != null && referralCode.isNotEmpty)
+          'referral_code': referralCode,
+        if (referralSchemeGrams != null)
+          'referral_scheme_grams': referralSchemeGrams,
+      },
+    );
   }
 
   Future<void> logout() async {

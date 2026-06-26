@@ -1,12 +1,29 @@
 import uuid
 from fastapi import APIRouter, Depends, status
 
-from app.api.dependencies import get_auth_service, get_current_user
+from app.api.dependencies import (
+    get_auth_service,
+    get_current_user,
+    get_signup_otp_service,
+    get_user_service,
+)
 from app.core.security import create_access_token, create_refresh_token
 from app.models.user import User
-from app.schemas.auth import LoginRequest, RefreshRequest, Token, UserResponse
+from app.schemas.auth import (
+    LoginRequest,
+    MobileLoginRequest,
+    RefreshRequest,
+    RegisterRequest,
+    SignupOtpSendRequest,
+    SignupOtpVerifyRequest,
+    Token,
+    UserResponse,
+)
 from app.schemas.base import MessageResponse
+from app.schemas.user import UserDetailResponse
 from app.services.auth import AuthService
+from app.services.signup_otp import SignupOtpService
+from app.services.user import UserService
 
 router = APIRouter()
 
@@ -21,10 +38,13 @@ async def login(
     login_data: LoginRequest,
     auth_service: AuthService = Depends(get_auth_service),
 ) -> Token:
-    """Authenticate a user using email and password, returning JWT access and refresh tokens."""
-    user = await auth_service.authenticate_user(login_data.email, login_data.password)
+    """Authenticate using email or mobile number and password."""
+    user = await auth_service.authenticate_user(
+        password=login_data.password,
+        email=login_data.email,
+        mobile_number=login_data.mobile_number,
+    )
 
-    # Generate a unique ID for the refresh token
     jti = str(uuid.uuid4())
     token_version = user.token_version or 0
     access_token = create_access_token(subject=user.id, token_version=token_version)
@@ -35,6 +55,73 @@ async def login(
     return Token(
         access_token=access_token,
         refresh_token=refresh_token,
+    )
+
+
+@router.post(
+    "/login/mobile",
+    response_model=Token,
+    status_code=status.HTTP_200_OK,
+    summary="End-user login with registered mobile number",
+)
+async def login_with_mobile(
+    payload: MobileLoginRequest,
+    auth_service: AuthService = Depends(get_auth_service),
+) -> Token:
+    user = await auth_service.authenticate_user_by_mobile(payload.mobile_number)
+    return await auth_service.issue_tokens_for_user(user, login_method="mobile")
+
+
+@router.post(
+    "/signup/otp/send",
+    response_model=MessageResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Send signup OTP to mobile number",
+)
+async def send_signup_otp(
+    payload: SignupOtpSendRequest,
+    otp_service: SignupOtpService = Depends(get_signup_otp_service),
+) -> MessageResponse:
+    await otp_service.send_signup_otp(payload.mobile_number)
+    return MessageResponse(message="OTP sent to your mobile number.")
+
+
+@router.post(
+    "/signup/otp/verify",
+    response_model=MessageResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Verify signup OTP before registration",
+)
+async def verify_signup_otp(
+    payload: SignupOtpVerifyRequest,
+    otp_service: SignupOtpService = Depends(get_signup_otp_service),
+) -> MessageResponse:
+    await otp_service.verify_signup_otp(payload.mobile_number, payload.otp)
+    return MessageResponse(message="Mobile number verified.")
+
+
+@router.post(
+    "/register",
+    response_model=UserDetailResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Register a new end-user account",
+)
+async def register(
+    register_data: RegisterRequest,
+    user_service: UserService = Depends(get_user_service),
+    otp_service: SignupOtpService = Depends(get_signup_otp_service),
+) -> UserDetailResponse:
+    """Public self-registration with verified mobile OTP."""
+    await otp_service.consume_verified_otp(
+        register_data.mobile_number, register_data.otp
+    )
+    return await user_service.register_public_user(
+        email=register_data.email,
+        password=register_data.password,
+        mobile_number=register_data.mobile_number,
+        name=register_data.name,
+        referral_code=register_data.referral_code,
+        referral_scheme_grams=register_data.referral_scheme_grams,
     )
 
 

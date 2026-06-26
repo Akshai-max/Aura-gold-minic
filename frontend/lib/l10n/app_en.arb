@@ -1,0 +1,561 @@
+{
+  "@@locale": "en",
+  "appTitle": "AGS Gold",
+
+  "languageEnglish": "English",
+  "languageTamil": "Tamil",
+  "changeAppLanguage": "Change App Language",
+  "selectPreferredLanguage": "Select your preferred language",
+  "languageSettings": "Language Settings",
+  "languageLabel": "Language",
+
+  "cancel": "Cancel",
+  "retry": "Retry",
+  "logout": "Logout",
+  "logOut": "Log Out",
+  "signIn": "Sign In",
+  "signUp": "Sign up",
+  "back": "Back",
+  "save": "Save",
+  "close": "Close",
+  "yes": "Yes",
+  "no": "No",
+  "live": "LIVE",
+
+  "navAurum": "AURUM",
+  "navHome": "Home",
+  "navOverview": "Overview",
+  "navProfile": "Profile",
+  "navAuditLogs": "Audit Logs",
+  "navCustomers": "Customers",
+  "navInventory": "Inventory",
+  "navTransactions": "Transactions",
+  "navReports": "Reports",
+  "navWorkflows": "Workflows",
+  "navUsers": "Users",
+  "navRoles": "Roles",
+  "navPermissions": "Permissions",
+  "navSettings": "Settings",
+
+  "goodMorning": "Good morning",
+  "goodAfternoon": "Good afternoon",
+  "goodEvening": "Good evening",
+  "greetingWithName": "{salutation}, {name}",
+  "@greetingWithName": {
+    "placeholders": {
+      "salutation": {"type": "String"},
+      "name": {"type": "String"}
+    }
+  },
+
+  "userDashboardKycSubtitle": "Complete KYC verification to unlock gold and silver buy & sell on AURUM.",
+  "userDashboardKycUnlockSubtitle": "Complete KYC to unlock secure gold trading.",
+  "userDashboardVerifiedSubtitle": "Your account is verified. Buy or sell gold anytime.",
+  "customerBadge": "Customer",
+  "mobileVerified": "Mobile verified",
+  "completeKycToTrade": "Complete KYC to trade",
+  "verifyPanBeforeTrading": "Verify your PAN before buying or selling gold.",
+  "completeKyc": "Complete KYC",
+  "goldHoldings": "Gold holdings",
+  "completeKycToStartTrading": "Complete KYC to start trading.",
+  "goldHoldingsFooterVerified": "Your gold balance updates after each trade.",
+  "liveRatePerGram": "Live rate: {rate} / gram",
+  "@liveRatePerGram": {
+    "placeholders": {
+      "rate": {"type": "String"}
+    }
+  },
+  "tradeGold": "Trade gold",
+  "buyGoldSubtitleShort": "Purchase at live market rates",
+  "sellGoldSubtitleShort": "Convert holdings to cash",
+  "kycRequired": "KYC required",
+
+  "goldSchemeTitle": "Gold savings scheme",
+  "goldSchemeChooseBadge": "Choose plan",
+  "goldSchemeActiveBadge": "{grams} g plan",
+  "@goldSchemeActiveBadge": {
+    "placeholders": {
+      "grams": {"type": "String"}
+    }
+  },
+  "goldSchemeCompletedBadge": "Completed",
+  "goldSchemeChooseSubtitle": "Pick one scheme to start saving. Sell unlocks only after you complete your chosen target.",
+  "goldSchemeTierLabel": "Save {grams} g",
+  "@goldSchemeTierLabel": {
+    "placeholders": {
+      "grams": {"type": "int"}
+    }
+  },
+  "goldSchemeSelected": "{grams} g gold scheme activated.",
+  "@goldSchemeSelected": {
+    "placeholders": {
+      "grams": {"type": "int"}
+    }
+  },
+  "goldSchemeSelectFailed": "Could not activate scheme. Please try again.",
+  "goldSchemeKycRequired": "Complete KYC to choose a scheme.",
+  "goldSchemeOfTarget": "of {grams} g target",
+  "@goldSchemeOfTarget": {
+    "placeholders": {
+      "grams": {"type": "String"}
+    }
+  },
+  "goldSchemeProgressPercent": "{percent}% of scheme completed",
+  "@goldSchemeProgressPercent": {
+    "placeholders": {
+      "percent": {"type": "String"}
+    }
+  },
+  "goldSchemeSellLocked": "Buy gold to unlock selling.",
+  "goldSchemeSellLockedShort": "Buy gold first",
+  "sellBuyGoldFirst": "Buy gold first to unlock selling.",
+  "goldSchemeContinueBuying": "Buy more gold",
+  "goldSchemeCompletedBody": "You completed your {grams} g gold savings scheme.",
+  "@goldSchemeCompletedBody": {
+    "placeholders": {
+      "grams": {"type": "String"}
+    }
+  },
+  "goldSchemeSellUnlocked": "You can sell your gold holdings anytime.",
+  "goldSchemeSelectBeforeBuy": "Choose a gold scheme (1 g, 5 g, or 10 g) before buying.",
+  "goldSchemeTapBuyToConfirm": "{grams} g selected — tap Buy Gold to confirm and lock your plan.",
+  "@goldSchemeTapBuyToConfirm": {
+    "placeholders": {
+      "grams": { "type": "int" }
+    }
+  },
+  "goldHoldingsChooseSchemeFooter": "Choose a savings scheme below to start buying gold.",
+  "goldHoldingsSchemeActiveFooter": "Keep buying until your scheme target is complete.",
+  "goldSchemeBuyBlockedTitle": "Choose your gold scheme first",
+  "goldSchemeBuyBlockedBody": "Select a 1 g, 5 g, or 10 g plan on your dashboard before purchasing gold.",
+
+  "mySavings": "My savings",
+  "myTransactions": "My transactions",
+  "buyRatePerGram": "Live buy rate: {rate} / gram",
+  "@buyRatePerGram": {
+    "placeholders": {
+      "rate": {"type": "String"}
+    }
+  },
+  "sellRatePerGram": "Live sell rate: {rate} / gram",
+  "@sellRatePerGram": {
+    "placeholders": {
+      "rate": {"type": "String"}
+    }
+  },
+  "goldWeightGrams": "Gold weight (grams)",
+  "amountInr": "Amount (₹)",
+  "continueToPayment": "Continue to payment",
+  "paymentComingSoon": "Payment integration is coming soon.",
+  "paymentSuccess": "Payment successful. Your gold balance has been updated.",
+  "paymentFailed": "Payment failed. Please try again.",
+  "enterValidTradeAmount": "Enter a valid gold weight or amount.",
+  "noTransactionsYet": "No gold transactions yet. Your buy and sell history will appear here.",
+  "addBankAccount": "Add bank account",
+  "accountHolderName": "Account holder name",
+  "accountNumber": "Account number",
+  "chooseBank": "Choose bank",
+  "ifscCode": "IFSC code",
+  "accountType": "Account type",
+  "savingsAccount": "Savings",
+  "currentAccount": "Current",
+  "verifyBankDetails": "Verify bank details",
+  "sendBankOtp": "Send OTP to verify",
+  "confirmBankLink": "Confirm bank link",
+  "bankLinkStepDetails": "Bank details",
+  "bankLinkStepOtp": "OTP verify",
+  "bankLinkOtpSentToMobile": "OTP sent to mobile ending {last4}",
+  "@bankLinkOtpSentToMobile": {
+    "placeholders": {
+      "last4": {"type": "String"}
+    }
+  },
+  "bankLinkVerified": "Bank link verified",
+  "verifyOtp": "Verify OTP",
+  "bankAccountsInfo": "Link your Indian bank account to receive payouts when you sell gold.",
+  "noBankAccountLinked": "No bank account linked",
+  "noBankAccountSubtitle": "Add your savings or current account to receive sell payouts.",
+  "findIfscCode": "Find your IFSC code",
+  "searchByState": "Search by State",
+  "searchByDistrict": "Search by District",
+  "searchByBranch": "Search by Branch",
+  "selectBank": "Select bank",
+  "selectState": "Select State",
+  "selectDistrict": "Select District",
+  "selectBranch": "Select Branch",
+  "saveAndSendOtp": "Save & send OTP",
+  "bankLinkOtpSent": "OTP sent to your registered mobile number.",
+  "bankAccountConnected": "Bank account linked successfully.",
+  "bankAccountsOtpNote": "Bank details are verified, then confirmed with a 6-digit OTP sent to your registered mobile number.",
+  "addBankAccountSheetSubtitle": "Use the same name as on your PAN card and bank passbook.",
+  "governmentVerifiedIdentity": "Government verified identity",
+  "kycStage3Title": "Verification complete",
+  "kycStage3Subtitle": "Your details were fetched from government records. Buy and sell are now unlocked.",
+
+  "welcomeToAgsGold": "Welcome to AGS GOLD",
+  "howWouldYouLikeToSignIn": "How would you like to sign in?",
+  "iAmAUser": "I am a User",
+  "iAmAUserSubtitle": "Sign in to your account, or create one if you are new.",
+  "iAmStaffAdmin": "I am Staff / Admin",
+  "iAmStaffAdminSubtitle": "Sign in with your staff credentials to manage gold operations.",
+  "secureEnterprisePortal": "Secure Enterprise Portal",
+  "staffSignIn": "Staff Sign In",
+  "welcomeBack": "Welcome Back",
+  "staffSignInSubtitle": "Enter your staff credentials to access the operations portal.",
+  "endUserSignInSubtitle": "Sign in with the mobile number you used during signup.",
+  "defaultSignInSubtitle": "Enter your credentials to access your account.",
+  "emailAddress": "Email Address",
+  "emailRequired": "Email address is required.",
+  "emailInvalid": "Enter a valid email address.",
+  "password": "Password",
+  "passwordRequired": "Password is required.",
+  "forgotPassword": "Forgot Password?",
+  "enterPassword": "Enter your password",
+  "dontHaveAccountSignUp": "Don't have an account? Sign up",
+  "backToAccountType": "Back to account type",
+  "createAccount": "Create Account",
+  "createAccountSubtitle": "Join AURUM to track gold savings and live bullion prices.",
+  "firstName": "First name",
+  "lastName": "Last name",
+  "confirmPassword": "Confirm password",
+  "passwordsDoNotMatch": "Passwords do not match.",
+  "accountCreatedSignIn": "Account created successfully. Please sign in.",
+  "signUpFailed": "Sign up failed. Please check your connection and try again.",
+  "alreadyHaveAccountSignIn": "Already have an account? Sign in",
+
+  "myProfile": "My Profile",
+  "profileSettings": "Profile Settings",
+  "general": "General",
+  "autoSavings": "Auto Savings",
+  "accountDetails": "Account Details",
+  "statements": "Statements",
+  "identityVerification": "Identity Verification",
+  "linkedBankAccount": "Linked Bank Account",
+  "nomineeDetails": "Nominee Details",
+  "modifyAutoSavings": "Modify AutoSavings",
+  "referAndEarn": "Refer & Earn",
+  "referAndEarnSubtitle": "Share a gold savings scheme with friends. When they sign up and choose the same scheme, you earn digital wallet money.",
+  "digitalWalletBalance": "Digital wallet balance",
+  "totalEarned": "Total earned",
+  "successfulReferrals": "Referrals",
+  "yourReferralCode": "Your referral code",
+  "shareSchemeEarn": "Share a scheme & earn",
+  "copyInviteLink": "Copy link",
+  "referralCodeCopied": "Referral code copied.",
+  "referralLinkCopied": "Invite link copied.",
+  "referralLoadFailed": "Could not load referral details: {error}",
+  "@referralLoadFailed": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "referralSchemeTitle": "{grams} g gold scheme",
+  "@referralSchemeTitle": {
+    "placeholders": {
+      "grams": { "type": "int" }
+    }
+  },
+  "referralSchemeReward": "You earn {amount} when they join this scheme",
+  "@referralSchemeReward": {
+    "placeholders": {
+      "amount": { "type": "String" }
+    }
+  },
+  "recentReferralRewards": "Recent rewards",
+  "referralRewardDetail": "{grams} g scheme • {amount} credited",
+  "@referralRewardDetail": {
+    "placeholders": {
+      "grams": { "type": "String" },
+      "amount": { "type": "String" }
+    }
+  },
+  "referralCodeOptional": "Referral code (optional)",
+  "invitedScheme": "Invited scheme: {grams} g",
+  "@invitedScheme": {
+    "placeholders": {
+      "grams": { "type": "int" }
+    }
+  },
+  "applyVoucher": "Apply Voucher",
+  "securityAndPermission": "Security & Permission",
+  "privacyPolicy": "Privacy Policy",
+  "digiGoldTermsTitle": "Digi Gold Terms & Conditions",
+  "agreeToDigiGoldTerms": "I agree to the Digi Gold Terms & Conditions",
+  "mustAcceptDigiGoldTerms": "You must accept the Terms & Conditions to continue.",
+  "viewTermsAndConditions": "View Terms & Conditions",
+  "helpAndSupport": "Help & Support",
+  "joinWhatsappChannel": "Join WhatsApp Channel",
+  "shareAuraGold": "Share Aura Gold",
+  "rateAuraGold": "Rate Aura Gold",
+  "clearCache": "Clear Cache",
+  "cacheCleared": "Cache cleared successfully.",
+  "followUsToStayUpdated": "Follow us, to stay updated",
+  "memberSince": "Increasing Aura since, {date}",
+  "@memberSince": {
+    "placeholders": {
+      "date": {"type": "String"}
+    }
+  },
+  "comingSoon": "{feature} is coming soon.",
+  "@comingSoon": {
+    "placeholders": {
+      "feature": {"type": "String"}
+    }
+  },
+  "logoutConfirmTitle": "Logout",
+  "logoutConfirmMessage": "Are you sure you want to logout?",
+  "logOutConfirmTitle": "Log Out",
+  "logOutConfirmMessage": "Are you sure you want to end your current session?",
+  "changePassword": "Change password",
+  "notificationPreferences": "Notification preferences",
+
+  "settings": "Settings",
+  "themeSettings": "Theme Settings",
+  "themeSystem": "System",
+  "themeLight": "Light",
+  "themeDark": "Dark",
+  "notificationSettings": "Notification Settings",
+  "emailNotifications": "Email notifications",
+  "pushNotifications": "Push notifications",
+  "securityAlerts": "Security alerts",
+  "systemUpdates": "System updates",
+  "securitySettings": "Security Settings",
+  "accountSettings": "Account Settings",
+  "editProfile": "Edit profile",
+  "accountStatus": "Account status",
+  "accountStatusHint": "Contact an administrator to deactivate your account.",
+  "failedToLoadSettings": "Failed to load settings: {error}",
+  "@failedToLoadSettings": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+
+  "dashboardSubtitle": "Live bullion rates and your gold savings in one place.",
+  "failedToLoadDashboard": "Failed to load dashboard: {error}",
+  "@failedToLoadDashboard": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "quickActions": "Quick Actions",
+  "newSale": "New Sale",
+  "customer": "Customer",
+  "workflow": "Workflow",
+
+  "liveMetalPrices": "Live Metal Prices",
+  "gold": "Gold",
+  "silver": "Silver",
+  "perGram": "/gm",
+  "priceHistory": "Price History",
+  "gold24k": "24K Gold",
+  "metalSpotGoldTamilNadu": "24K Gold · Tamil Nadu",
+  "metalSpotSilverTamilNadu": "Silver · Tamil Nadu",
+  "priceHistorySubtitleGold": "Tamil Nadu · 24K gold",
+  "priceHistorySubtitleSilver": "Tamil Nadu · silver",
+  "perGramLabel": "per gram",
+  "priceUpdatedAt": "Updated {time}",
+  "@priceUpdatedAt": {
+    "placeholders": {
+      "time": {"type": "String"}
+    }
+  },
+  "performanceChangeInRange": "{arrow} {percent}% in {range}",
+  "@performanceChangeInRange": {
+    "placeholders": {
+      "arrow": {"type": "String"},
+      "percent": {"type": "String"},
+      "range": {"type": "String"}
+    }
+  },
+  "livePrice": "Live Price",
+  "livePriceTitle": "Live Price",
+  "setAlert": "Set Alert",
+  "performanceInRange": "Performance in {range}",
+  "@performanceInRange": {
+    "placeholders": {
+      "range": {"type": "String"}
+    }
+  },
+  "goldToSilverRatio": "Gold to Silver Ratio",
+  "silverUndervaluedVsGold": "Silver may be undervalued vs gold",
+  "goldPremiumModerate": "Gold premium vs silver is moderate",
+
+  "yourGoldSavings": "YOUR GOLD SAVINGS",
+  "yourSilverSavings": "YOUR SILVER SAVINGS",
+  "tapMetalIconForChart": "Tap the gold or silver icon to view live price chart",
+  "backToAurum": "Back to AURUM",
+  "failedToLoadLivePrice": "Failed to load live price: {error}",
+  "@failedToLoadLivePrice": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "failedToLoadChart": "Failed to load chart: {error}",
+  "@failedToLoadChart": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+
+  "kycVerification": "Complete KYC",
+  "verifyForGoldTrading": "Verify for gold trading",
+  "howPanVerificationWorks": "How PAN verification works",
+  "panVerificationFlowSubtitle": "Your details are checked against official government PAN records – you never leave this app.",
+  "panFlowYourDetails": "Your details",
+  "panFlowYourDetailsSubtitle": "Name, PAN, DOB",
+  "panFlowSecureTransfer": "Secure transfer",
+  "panFlowSecureKycApi": "Secure KYC API",
+  "panFlowLicensedProvider": "Licensed provider",
+  "kycStepConfirm": "Confirm",
+  "kycStep1VerifyAadhaar": "Step 1: Verify Aadhaar",
+  "kycAadhaarOtpInstruction": "Enter your 12-digit Aadhaar number. An OTP will be sent to the mobile linked with your Aadhaar — it must match the mobile number you registered with.",
+  "kycRegisteredMobileHint": "Registered mobile: {mobile}",
+  "@kycRegisteredMobileHint": {
+    "placeholders": {
+      "mobile": {"type": "String"}
+    }
+  },
+  "aadhaarMobileVerifiedSubtitle": "Aadhaar verified. The mobile below is linked with your Aadhaar. Continue with PAN linking.",
+  "mobileNumber": "Mobile number",
+  "kycMobileMismatchError": "The mobile linked with this Aadhaar does not match your registered number. Use the same mobile you signed up with.",
+  "useDigilockerInstead": "Use DigiLocker verification instead",
+  "useManualPanInstead": "Use manual PAN verification instead",
+  "kycStage1Subtitle": "Stage 1: Verify your Aadhaar with a UIDAI OTP.",
+  "kycStage2Subtitle": "Stage 2: Link your PAN with your verified Aadhaar.",
+  "aadhaarOtpStep": "Aadhaar OTP",
+  "panLinkStep": "PAN link",
+  "aadhaarNumber": "Aadhaar number",
+  "aadhaarHint": "12-digit Aadhaar number",
+  "aadhaarInvalid": "Enter a valid 12-digit Aadhaar number",
+  "sendOtp": "Send OTP",
+  "sendingOtp": "Sending OTP...",
+  "otpSentToMobile": "OTP sent to the mobile linked with Aadhaar{ending}.",
+  "@otpSentToMobile": {
+    "placeholders": {
+      "ending": {"type": "String"}
+    }
+  },
+  "otpSentEnding": " ending {last4}",
+  "@otpSentEnding": {
+    "placeholders": {
+      "last4": {"type": "String"}
+    }
+  },
+  "enterOtp": "Enter OTP",
+  "otpHint": "6-digit OTP",
+  "otpInvalid": "Enter the 6-digit OTP",
+  "changeAadhaarNumber": "Change Aadhaar number",
+  "resendOtp": "Resend OTP",
+  "verifyAadhaar": "Verify Aadhaar",
+  "verifying": "Verifying...",
+  "panNumber": "PAN number",
+  "panHint": "ABCDE1234F",
+  "panHelper": "We verify that your PAN is linked with your Aadhaar on the Income Tax portal.",
+  "panInvalid": "Enter a valid PAN (e.g. ABCDE1234F)",
+  "backToAadhaarVerification": "Back to Aadhaar verification",
+  "verifyPanLink": "Verify PAN link",
+  "aadhaarVerified": "Aadhaar verified",
+  "aadhaarVerifiedLast4": "Aadhaar verified (****{last4})",
+  "@aadhaarVerifiedLast4": {
+    "placeholders": {
+      "last4": {"type": "String"}
+    }
+  },
+  "backToDashboard": "Back to dashboard",
+  "otpSentSnack": "OTP sent to your Aadhaar-linked mobile number.",
+  "aadhaarVerifiedSnack": "Aadhaar verified successfully.",
+  "aadhaarVerifiedContinuePan": "Aadhaar verified. Enter your PAN number below to continue.",
+  "kycCompleteSnack": "KYC complete. Gold trading is now unlocked.",
+  "unableToSendOtp": "Unable to send OTP. Please try again.",
+  "otpVerificationFailed": "OTP verification failed. Please try again.",
+  "panVerificationFailed": "PAN verification failed. Please try again.",
+
+  "kycBannerCompletePanTitle": "Complete PAN linking",
+  "kycBannerCompletePanSubtitle": "Your Aadhaar is verified. Enter your PAN to confirm it is linked with Aadhaar and unlock gold trading.",
+  "kycBannerContinuePan": "Continue with PAN",
+  "kycBannerPendingTitle": "KYC verification in progress",
+  "kycBannerPendingSubtitle": "We are reviewing your documents. Gold trading unlocks after approval.",
+  "kycBannerViewStatus": "View status",
+  "kycBannerRejectedTitle": "KYC verification needs attention",
+  "kycBannerRejectedSubtitle": "PAN could not be linked with your Aadhaar. Link them on the Income Tax portal and try again.",
+  "kycBannerRestart": "Restart KYC",
+  "kycBannerStartTitle": "Complete KYC verification for gold trading",
+  "kycBannerStartSubtitle": "Verify your Aadhaar with OTP, then confirm your PAN is linked to unlock bullion trading on AURUM.",
+  "kycBannerStartAction": "Start KYC verification",
+  "kycStepAadhaar": "Aadhaar verification (UIDAI OTP)",
+  "kycStepPan": "PAN–Aadhaar link (Sandbox)",
+  "kycStepTrading": "Gold trading access",
+
+  "goldTrading": "Gold Trading",
+  "buyGold": "Buy Gold",
+  "sellGold": "Sell Gold",
+  "buySilver": "Buy Silver",
+  "sellSilver": "Sell Silver",
+  "buyGoldSubtitle": "Purchase 24K digital gold at live rates",
+  "sellGoldSubtitle": "Sell your gold holdings instantly",
+  "buySilverSubtitle": "Purchase digital silver at live rates",
+  "sellSilverSubtitle": "Sell your silver holdings instantly",
+  "kycRequiredForTrading": "Complete KYC verification to buy or sell gold and silver.",
+  "kycVerifiedTitle": "KYC verified",
+  "kycVerifiedSubtitle": "You can buy and sell gold and silver on AURUM.",
+  "kycVerifiedDashboardSubtitle": "You can buy and sell gold securely.",
+  "kycVerifiedHeading": "KYC Verified",
+  "verifiedViaSandbox": "Verified via Sandbox Secure KYC",
+  "panVerificationLabel": "PAN verification",
+  "registeredName": "Registered name",
+  "dateOfBirth": "Date of birth",
+  "gender": "Gender",
+  "address": "Address",
+  "state": "State",
+  "district": "District",
+  "pincode": "Pincode",
+  "mobileLinkedAadhaar": "Mobile linked with Aadhaar",
+  "aadhaarDetailsFromGov": "These details were fetched from UIDAI government records.",
+  "accountSection": "Account",
+  "myProfile": "My Profile",
+  "manageYourProfile": "View and update your profile",
+  "identityVerified": "Identity verified",
+  "bankAccounts": "Bank accounts",
+  "manageBankAccounts": "Manage linked bank accounts",
+  "bankAccountsComingSoon": "Bank account linking is coming soon.",
+  "kycPromptTitle": "KYC required for trading",
+  "kycPromptMessage": "To {action}, complete identity verification first. It only takes a few minutes.",
+  "@kycPromptMessage": {
+    "placeholders": {
+      "action": {"type": "String"}
+    }
+  },
+  "startTrading": "Start trading",
+
+  "notifications": "Notifications",
+  "noNotifications": "No notifications yet",
+  "markAllRead": "Mark all as read",
+  "failedToLoadProfile": "Failed to load profile: {error}",
+  "@failedToLoadProfile": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+
+  "sellGoldInquiryTitle": "Sell Gold Inquiry",
+  "sellGoldInquirySubtitle": "Tell us about the gold you want to sell. Our team will review your request and contact you with next steps.",
+  "sellGoldInquirySubtitleShort": "Submit a sell request to our team",
+  "sellGoldInquiryName": "Your name",
+  "sellGoldInquiryMobile": "Mobile number",
+  "sellGoldInquiryMessage": "Message",
+  "sellGoldInquiryNameRequired": "Please enter your name",
+  "sellGoldInquiryMobileRequired": "Enter a valid 10-digit mobile number",
+  "sellGoldInquiryMessageRequired": "Please describe what you want to sell (min 10 characters)",
+  "sellGoldInquirySubmit": "Submit inquiry",
+  "sellGoldInquirySubmitted": "Your sell request was submitted. We will contact you soon.",
+  "sellGoldInquirySubmitFailed": "Could not submit your request. Please try again.",
+  "navSellInquiries": "Sell Inquiries",
+  "goldInvestedAmount": "Invested: {amount}",
+  "@goldInvestedAmount": {
+    "placeholders": {
+      "amount": {"type": "String"}
+    }
+  },
+  "navPaymentSettlements": "Payment Settlements"
+}

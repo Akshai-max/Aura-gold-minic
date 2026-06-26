@@ -27,6 +27,11 @@ from app.api.supplier import router as supplier_router
 from app.api.transaction import router as transaction_router
 from app.api.report import router as report_router
 from app.api.workflow import router as workflow_router
+from app.api.payments import router as payments_router
+from app.api.bank_accounts import router as bank_accounts_router
+from app.api.gold_scheme import router as gold_scheme_router
+from app.api.referrals import router as referrals_router
+from app.api.sell_inquiries import router as sell_inquiries_router
 from app.database.session import verify_db_connection, async_session_maker
 from app.database import base as db_base  # noqa: F401
 from app.repositories.token_blacklist import TokenBlacklistRepository
@@ -48,6 +53,18 @@ async def lifespan(app: FastAPI):
         logger.warning(
             "db_connection_failed",
             message="Could not connect to database on startup. Please verify credentials/server status.",
+        )
+
+    if settings.MSG91_AUTH_KEY.strip():
+        logger.info(
+            "msg91_startup_config",
+            template_id=settings.MSG91_OTP_TEMPLATE_ID,
+            flow_id=settings.MSG91_FLOW_ID or settings.MSG91_OTP_TEMPLATE_ID,
+            channels=settings.MSG91_SMS_CHANNELS,
+            sender=settings.SMS_SENDER_ID,
+            native_verify=settings.SIGNUP_OTP_USE_MSG91_VERIFY,
+            dlt_te_configured=bool(settings.MSG91_DLT_TE_ID.strip()),
+            dlt_template_configured=bool(settings.MSG91_DLT_TEMPLATE_ID.strip()),
         )
 
     if db_connected:
@@ -154,4 +171,29 @@ app.include_router(
     workflow_router,
     prefix=f"{settings.API_V1_STR}/workflows",
     tags=["workflows"],
+)
+app.include_router(
+    payments_router,
+    prefix=f"{settings.API_V1_STR}/payments",
+    tags=["payments"],
+)
+app.include_router(
+    bank_accounts_router,
+    prefix=f"{settings.API_V1_STR}/bank-accounts",
+    tags=["bank-accounts"],
+)
+app.include_router(
+    gold_scheme_router,
+    prefix=f"{settings.API_V1_STR}/gold-scheme",
+    tags=["gold-scheme"],
+)
+app.include_router(
+    referrals_router,
+    prefix=f"{settings.API_V1_STR}/referrals",
+    tags=["referrals"],
+)
+app.include_router(
+    sell_inquiries_router,
+    prefix=f"{settings.API_V1_STR}/sell-inquiries",
+    tags=["sell-inquiries"],
 )

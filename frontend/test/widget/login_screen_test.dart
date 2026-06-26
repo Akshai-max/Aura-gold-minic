@@ -116,11 +116,9 @@ void main() {
 
     // Splash screen is displayed first
     await tester.pump();
-    // Wait for the 2-second Splash delay in AuthNotifier to resolve
-    await tester.pump(const Duration(seconds: 2));
     await tester.pumpAndSettle();
 
-    // Now we should be on LoginScreen
+    // With staff audience preset, we should be on LoginScreen
     expect(find.byKey(const Key('loginButton')), findsOneWidget);
 
     // Input email and password

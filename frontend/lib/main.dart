@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:ags_gold/core/logging/api_debug_log.dart';
+import 'package:ags_gold/l10n/app_localizations.dart';
 import 'package:ags_gold/config/env_config.dart';
 import 'package:ags_gold/core/theme/app_theme.dart';
 import 'package:ags_gold/routes/app_routes.dart';
@@ -22,6 +24,8 @@ final appLocaleProvider = Provider<Locale?>((ref) {
 });
 
 void main() {
+  installApiOnlyDebugLogging();
+
   assert(
     Uri.tryParse(EnvConfig.active.baseUrl)?.hasAbsolutePath ?? false,
     'Invalid API Base URL configured. Check EnvConfig parameters.',
@@ -46,8 +50,9 @@ class AGSGoldApp extends ConsumerWidget {
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       locale: locale,
-      supportedLocales: const [Locale('en'), Locale('es'), Locale('fr')],
-      localizationsDelegates: const [
+      supportedLocales: AppLocalizations.supportedLocales,
+      localizationsDelegates: [
+        AppLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,

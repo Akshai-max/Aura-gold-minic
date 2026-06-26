@@ -1,7 +1,10 @@
 import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
+import 'package:ags_gold/core/logging/api_debug_log.dart';
 import 'package:ags_gold/config/env_config.dart';
 import 'package:ags_gold/services/interfaces/secure_storage.dart';
+import 'package:ags_gold/services/api_client_transport_stub.dart'
+    if (dart.library.io) 'package:ags_gold/services/api_client_transport_io.dart';
 
 const _kContentType = 'Content-Type';
 const _kAccept = 'Accept';
@@ -105,14 +108,19 @@ class ApiClient {
         ),
       );
 
-      if (kDebugMode) {
+      configureHttpAdapters(_dio, _refreshDio, activeConfig.connectionTimeout);
+
+      const verboseApiLogs = bool.fromEnvironment('VERBOSE_API_LOGS');
+      if (kDebugMode && verboseApiLogs) {
         _dio.interceptors.add(
           LogInterceptor(
             requestBody: true,
             responseBody: true,
-            logPrint: (obj) => debugPrint('[API] $obj'),
+            logPrint: (obj) => apiLog('$obj'),
           ),
         );
+      } else if (kDebugMode) {
+        _dio.interceptors.add(_CompactApiLogInterceptor());
       }
     }
 
@@ -134,6 +142,7 @@ class ApiClient {
           final path = error.requestOptions.path;
           final isAuthPath =
               path.contains('/auth/login') ||
+              path.contains('/auth/register') ||
               path.contains('/auth/refresh') ||
               path.contains('/auth/logout');
 
@@ -265,6 +274,14 @@ class ApiClient {
 
       case DioExceptionType.unknown:
       default:
+        final inner = error.error;
+        if (isTransportLevelError(inner)) {
+          return NetworkException(
+            'Cannot reach the API server. Confirm it is running, bound to '
+            '0.0.0.0:8000, and that your phone is on the same Wi‑Fi network '
+            'as the machine hosting the backend.',
+          );
+        }
         return UnknownApiException(
           error.message ?? 'An unknown network error occurred.',
         );
@@ -281,8 +298,15 @@ class ApiClient {
       return error['message'].toString();
     }
 
-    if (responseData['detail'] != null) {
-      return responseData['detail'].toString();
+    final detail = responseData['detail'];
+    if (detail is String) {
+      return detail;
+    }
+    if (detail is List && detail.isNotEmpty) {
+      final first = detail.first;
+      if (first is Map && first['msg'] != null) {
+        return first['msg'].toString();
+      }
     }
 
     return '';
@@ -363,6 +387,26 @@ class ApiClient {
     }
   }
 
+  Future<Response<T>> patch<T>(
+    String path, {
+    dynamic data,
+    Map<String, dynamic>? queryParameters,
+    Options? options,
+    CancelToken? cancelToken,
+  }) async {
+    try {
+      return await _dio.patch<T>(
+        path,
+        data: data,
+        queryParameters: queryParameters,
+        options: options,
+        cancelToken: cancelToken,
+      );
+    } on DioException catch (e) {
+      throw e.error as ApiException;
+    }
+  }
+
   Future<Response<T>> delete<T>(
     String path, {
     dynamic data,
@@ -381,5 +425,66 @@ class ApiClient {
     } on DioException catch (e) {
       throw e.error as ApiException;
     }
+  }
+}
+
+/// Logs one line per request/response so Flutter run key commands stay visible.
+class _CompactApiLogInterceptor extends Interceptor {
+  static String _pathWithQuery(RequestOptions options) {
+    final path = options.path.isNotEmpty ? options.path : options.uri.path;
+    final query = options.uri.query;
+    if (query.isEmpty) return path;
+    return '$path?$query';
+  }
+
+  static String _errorDetail(DioException err) {
+    final data = err.response?.data;
+    if (data is Map) {
+      final error = data['error'];
+      if (error is Map && error['message'] != null) {
+        return error['message'].toString();
+      }
+      final detail = data['detail'];
+      if (detail is String && detail.isNotEmpty) {
+        return detail;
+      }
+      if (detail is List && detail.isNotEmpty) {
+        final first = detail.first;
+        if (first is Map && first['msg'] != null) {
+          return first['msg'].toString();
+        }
+      }
+    }
+    if (err.message != null && err.message!.trim().isNotEmpty) {
+      return err.message!.trim();
+    }
+    return err.type.name;
+  }
+
+  @override
+  void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
+    apiLog('${options.method} ${_pathWithQuery(options)}');
+    handler.next(options);
+  }
+
+  @override
+  void onResponse(Response<dynamic> response, ResponseInterceptorHandler handler) {
+    apiLog(
+      '${response.statusCode} ${response.requestOptions.method} ${_pathWithQuery(response.requestOptions)}',
+    );
+    handler.next(response);
+  }
+
+  @override
+  void onError(DioException err, ErrorInterceptorHandler handler) {
+    if (err.type == DioExceptionType.cancel) {
+      handler.next(err);
+      return;
+    }
+    final status = err.response?.statusCode;
+    apiLog(
+      'ERROR ${status ?? '-'} ${err.requestOptions.method} ${_pathWithQuery(err.requestOptions)}: ${_errorDetail(err)}',
+    );
+    handler.next(err);
   }
 }

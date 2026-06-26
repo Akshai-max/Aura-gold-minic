@@ -18,6 +18,23 @@ class UserRepository(BaseRepository[User]):
         result = await self.db.execute(query)
         return result.scalars().first()
 
+    async def get_by_mobile(self, mobile_number: str) -> Optional[User]:
+        """Fetch a user record by mobile number, excluding soft-deleted ones."""
+        query = select(User).where(
+            User.mobile_number == mobile_number,
+            User.is_deleted.is_(False),
+        )
+        result = await self.db.execute(query)
+        return result.scalars().first()
+
+    async def get_by_referral_code(self, referral_code: str) -> Optional[User]:
+        query = select(User).where(
+            User.referral_code == referral_code,
+            User.is_deleted.is_(False),
+        )
+        result = await self.db.execute(query)
+        return result.scalars().first()
+
     async def get_user_ids_with_permission(self, permission_name: str) -> list[Any]:
         """Return active user IDs granted a specific permission."""
         from app.models.permission import Permission
@@ -78,6 +95,7 @@ class UserRepository(BaseRepository[User]):
                 User.email.ilike(pattern)
                 | User.first_name.ilike(pattern)
                 | User.last_name.ilike(pattern)
+                | User.mobile_number.ilike(pattern)
             )
 
         if is_active is not None:

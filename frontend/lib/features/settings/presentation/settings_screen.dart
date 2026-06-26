@@ -5,6 +5,8 @@ import 'package:ags_gold/core/widgets/premium_skeleton.dart';
 import 'package:ags_gold/features/settings/presentation/providers/settings_provider.dart';
 import 'package:ags_gold/features/profile/presentation/profile_dialogs.dart';
 import 'package:ags_gold/services/service_providers.dart';
+import 'package:ags_gold/l10n/app_languages.dart';
+import 'package:ags_gold/l10n/l10n_extension.dart';
 import 'package:go_router/go_router.dart';
 
 class SettingsScreen extends ConsumerWidget {
@@ -12,12 +14,13 @@ class SettingsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
     final settingsAsync = ref.watch(userSettingsProvider);
     final themeMode = ref.watch(themeModeProvider);
     final theme = Theme.of(context);
 
     return ResponsiveNavigationWrapper(
-      title: 'Settings',
+      title: l10n.settings,
       child: settingsAsync.when(
         data: (settings) => SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -26,24 +29,24 @@ class SettingsScreen extends ConsumerWidget {
             children: [
               _sectionCard(
                 theme,
-                'Theme Settings',
+                l10n.themeSettings,
                 Icons.palette_outlined,
                 SegmentedButton<ThemeMode>(
-                  segments: const [
+                  segments: [
                     ButtonSegment(
                       value: ThemeMode.system,
-                      label: Text('System'),
-                      icon: Icon(Icons.brightness_auto),
+                      label: Text(l10n.themeSystem),
+                      icon: const Icon(Icons.brightness_auto),
                     ),
                     ButtonSegment(
                       value: ThemeMode.light,
-                      label: Text('Light'),
-                      icon: Icon(Icons.light_mode),
+                      label: Text(l10n.themeLight),
+                      icon: const Icon(Icons.light_mode),
                     ),
                     ButtonSegment(
                       value: ThemeMode.dark,
-                      label: Text('Dark'),
-                      icon: Icon(Icons.dark_mode),
+                      label: Text(l10n.themeDark),
+                      icon: const Icon(Icons.dark_mode),
                     ),
                   ],
                   selected: {themeMode},
@@ -55,12 +58,12 @@ class SettingsScreen extends ConsumerWidget {
               const SizedBox(height: 16),
               _sectionCard(
                 theme,
-                'Notification Settings',
+                l10n.notificationSettings,
                 Icons.notifications_active_outlined,
                 Column(
                   children: [
                     SwitchListTile(
-                      title: const Text('Email notifications'),
+                      title: Text(l10n.emailNotifications),
                       value: settings.notificationEmailEnabled,
                       onChanged: (v) => _saveSettings(
                         ref,
@@ -68,7 +71,7 @@ class SettingsScreen extends ConsumerWidget {
                       ),
                     ),
                     SwitchListTile(
-                      title: const Text('Push notifications'),
+                      title: Text(l10n.pushNotifications),
                       value: settings.notificationPushEnabled,
                       onChanged: (v) => _saveSettings(
                         ref,
@@ -76,7 +79,7 @@ class SettingsScreen extends ConsumerWidget {
                       ),
                     ),
                     SwitchListTile(
-                      title: const Text('Security alerts'),
+                      title: Text(l10n.securityAlerts),
                       value: settings.notificationSecurityAlerts,
                       onChanged: (v) => _saveSettings(
                         ref,
@@ -84,7 +87,7 @@ class SettingsScreen extends ConsumerWidget {
                       ),
                     ),
                     SwitchListTile(
-                      title: const Text('System updates'),
+                      title: Text(l10n.systemUpdates),
                       value: settings.notificationSystemUpdates,
                       onChanged: (v) => _saveSettings(
                         ref,
@@ -97,13 +100,13 @@ class SettingsScreen extends ConsumerWidget {
               const SizedBox(height: 16),
               _sectionCard(
                 theme,
-                'Security Settings',
+                l10n.securitySettings,
                 Icons.security,
                 Column(
                   children: [
                     ListTile(
                       leading: const Icon(Icons.password),
-                      title: const Text('Change password'),
+                      title: Text(l10n.changePassword),
                       trailing: const Icon(Icons.chevron_right),
                       onTap: () => showChangePasswordDialog(context, ref),
                     ),
@@ -113,15 +116,17 @@ class SettingsScreen extends ConsumerWidget {
               const SizedBox(height: 16),
               _sectionCard(
                 theme,
-                'Language Settings',
+                l10n.languageSettings,
                 Icons.language,
                 DropdownButtonFormField<String>(
                   initialValue: settings.locale,
-                  decoration: const InputDecoration(labelText: 'Language'),
-                  items: const [
-                    DropdownMenuItem(value: 'en', child: Text('English')),
-                    DropdownMenuItem(value: 'es', child: Text('Español')),
-                    DropdownMenuItem(value: 'fr', child: Text('Français')),
+                  decoration: InputDecoration(labelText: l10n.languageLabel),
+                  items: [
+                    for (final option in kAppLanguageOptions)
+                      DropdownMenuItem(
+                        value: option.code,
+                        child: Text(option.nativeLabel),
+                      ),
                   ],
                   onChanged: (v) {
                     if (v != null) {
@@ -133,22 +138,20 @@ class SettingsScreen extends ConsumerWidget {
               const SizedBox(height: 16),
               _sectionCard(
                 theme,
-                'Account Settings',
+                l10n.accountSettings,
                 Icons.manage_accounts,
                 Column(
                   children: [
                     ListTile(
                       leading: const Icon(Icons.person_outline),
-                      title: const Text('Edit profile'),
+                      title: Text(l10n.editProfile),
                       trailing: const Icon(Icons.chevron_right),
                       onTap: () => context.go('/profile'),
                     ),
-                    const ListTile(
-                      leading: Icon(Icons.info_outline),
-                      title: Text('Account status'),
-                      subtitle: Text(
-                        'Contact an administrator to deactivate your account.',
-                      ),
+                    ListTile(
+                      leading: const Icon(Icons.info_outline),
+                      title: Text(l10n.accountStatus),
+                      subtitle: Text(l10n.accountStatusHint),
                     ),
                   ],
                 ),
@@ -160,7 +163,7 @@ class SettingsScreen extends ConsumerWidget {
           padding: EdgeInsets.all(24),
           child: PremiumSkeletonCard(),
         ),
-        error: (e, _) => Center(child: Text('Failed to load settings: $e')),
+        error: (e, _) => Center(child: Text(l10n.failedToLoadSettings('$e'))),
       ),
     );
   }

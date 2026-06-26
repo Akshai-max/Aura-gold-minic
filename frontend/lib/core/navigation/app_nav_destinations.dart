@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ags_gold/core/auth/permission_utils.dart';
+import 'package:ags_gold/core/logging/app_event_log.dart';
+import 'package:ags_gold/features/auth/domain/app_audience.dart';
 import 'package:ags_gold/features/profile/domain/profile.dart';
+import 'package:ags_gold/l10n/app_localizations.dart';
+import 'package:ags_gold/l10n/l10n_extension.dart';
 
 /// Canonical app navigation destinations with optional RBAC gates.
 class AppNavDestination {
@@ -20,7 +24,11 @@ class AppNavDestination {
   });
 }
 
-List<AppNavDestination> buildNavDestinations(UserProfile? profile) {
+List<AppNavDestination> buildNavDestinations(
+  UserProfile? profile, {
+  AppAudience? audience,
+  required AppLocalizations l10n,
+}) {
   bool visible(String? permission) {
     if (permission == null) return true;
     if (profile == null) return false;
@@ -28,90 +36,132 @@ List<AppNavDestination> buildNavDestinations(UserProfile? profile) {
   }
 
   final all = [
-    const AppNavDestination(
+    AppNavDestination(
+      routePrefix: '/user-dashboard',
+      label: l10n.navAurum,
+      icon: Icons.home_outlined,
+      selectedIcon: Icons.home,
+    ),
+    AppNavDestination(
       routePrefix: '/dashboard',
-      label: 'Overview',
+      label: l10n.navOverview,
       icon: Icons.dashboard_outlined,
       selectedIcon: Icons.dashboard,
+      requiredPermission: 'dashboard.view',
     ),
-    const AppNavDestination(
+    AppNavDestination(
       routePrefix: '/profile',
-      label: 'Profile',
+      label: l10n.navProfile,
       icon: Icons.person_outline,
       selectedIcon: Icons.person,
     ),
-    const AppNavDestination(
+    AppNavDestination(
       routePrefix: '/audit-logs',
-      label: 'Audit Logs',
+      label: l10n.navAuditLogs,
       icon: Icons.history_outlined,
       selectedIcon: Icons.history,
       requiredPermission: 'audit.view',
     ),
-    const AppNavDestination(
+    AppNavDestination(
       routePrefix: '/customers',
-      label: 'Customers',
+      label: l10n.navCustomers,
       icon: Icons.storefront_outlined,
       selectedIcon: Icons.storefront,
       requiredPermission: 'customer.view',
     ),
-    const AppNavDestination(
+    AppNavDestination(
       routePrefix: '/inventory',
-      label: 'Inventory',
+      label: l10n.navInventory,
       icon: Icons.inventory_2_outlined,
       selectedIcon: Icons.inventory_2,
       requiredPermission: 'inventory.view',
     ),
-    const AppNavDestination(
+    AppNavDestination(
       routePrefix: '/transactions',
-      label: 'Transactions',
+      label: l10n.navTransactions,
       icon: Icons.receipt_long_outlined,
       selectedIcon: Icons.receipt_long,
       requiredPermission: 'transaction.view',
     ),
-    const AppNavDestination(
+    AppNavDestination(
+      routePrefix: '/admin/payment-settlements',
+      label: l10n.navPaymentSettlements,
+      icon: Icons.payments_outlined,
+      selectedIcon: Icons.payments,
+      requiredPermission: 'transaction.view',
+    ),
+    AppNavDestination(
+      routePrefix: '/admin/sell-inquiries',
+      label: l10n.navSellInquiries,
+      icon: Icons.sell_outlined,
+      selectedIcon: Icons.sell,
+      requiredPermission: 'transaction.view',
+    ),
+    AppNavDestination(
       routePrefix: '/reports',
-      label: 'Reports',
+      label: l10n.navReports,
       icon: Icons.analytics_outlined,
       selectedIcon: Icons.analytics,
       requiredPermission: 'report.view',
     ),
-    const AppNavDestination(
+    AppNavDestination(
       routePrefix: '/workflows',
-      label: 'Workflows',
+      label: l10n.navWorkflows,
       icon: Icons.approval_outlined,
       selectedIcon: Icons.approval,
       requiredPermission: 'workflow.view',
     ),
-    const AppNavDestination(
+    AppNavDestination(
       routePrefix: '/admin/users',
-      label: 'Users',
+      label: l10n.navUsers,
       icon: Icons.people_outline,
       selectedIcon: Icons.people,
       requiredPermission: 'user.view',
     ),
-    const AppNavDestination(
+    AppNavDestination(
       routePrefix: '/admin/roles',
-      label: 'Roles',
+      label: l10n.navRoles,
       icon: Icons.admin_panel_settings_outlined,
       selectedIcon: Icons.admin_panel_settings,
       requiredPermission: 'role:read',
     ),
-    const AppNavDestination(
+    AppNavDestination(
       routePrefix: '/admin/permissions',
-      label: 'Permissions',
+      label: l10n.navPermissions,
       icon: Icons.security_outlined,
       selectedIcon: Icons.security,
       requiredPermission: 'role:read',
     ),
-    const AppNavDestination(
+    AppNavDestination(
       routePrefix: '/settings',
-      label: 'Settings',
+      label: l10n.navSettings,
       icon: Icons.settings_outlined,
       selectedIcon: Icons.settings,
     ),
   ];
 
-  return all.where((d) => visible(d.requiredPermission)).toList();
+  return all.where((d) {
+    if (!visible(d.requiredPermission)) return false;
+    if (audience == AppAudience.endUser) {
+      const staffOnlyRoutes = {
+        '/dashboard',
+        '/audit-logs',
+        '/customers',
+        '/inventory',
+        '/transactions',
+        '/admin/payment-settlements',
+        '/admin/sell-inquiries',
+        '/reports',
+        '/workflows',
+        '/admin/users',
+        '/admin/roles',
+        '/admin/permissions',
+        '/settings',
+      };
+      if (staffOnlyRoutes.contains(d.routePrefix)) return false;
+    }
+    return true;
+  }).toList();
 }
 
 int selectedNavIndex(String path, List<AppNavDestination> destinations) {
@@ -129,7 +179,16 @@ void navigateToIndex(
   List<AppNavDestination> destinations,
 ) {
   if (index < 0 || index >= destinations.length) return;
-  context.go(destinations[index].routePrefix);
+  final dest = destinations[index];
+  AppEventLog.action(
+    'tab_selected',
+    data: {
+      'index': index,
+      'route': dest.routePrefix,
+      'label': dest.label,
+    },
+  );
+  context.go(dest.routePrefix);
 }
 
 bool matchesNavRoute(String path, String routePrefix) {
@@ -145,5 +204,5 @@ int selectedNavIndexForPath(String path, List<AppNavDestination> destinations) {
       return i;
     }
   }
-  return 0;
+  return -1;
 }

@@ -17,6 +17,7 @@ from app.repositories.user import UserRepository
 from app.repositories.token_blacklist import TokenBlacklistRepository
 from app.schemas.auth import Token
 from app.services.audit import AuditService
+from app.utils.mobile import normalize_mobile
 
 
 class AuthService:
@@ -32,10 +33,19 @@ class AuthService:
         self.token_blacklist_repo = token_blacklist_repo
         self.audit_service = audit_service
 
-    async def authenticate_user(self, email: str, password: str) -> User:
+    async def authenticate_user(
+        self,
+        password: str,
+        email: str | None = None,
+        mobile_number: str | None = None,
+    ) -> User:
         """Authenticate user credentials and return the active User object."""
+        identifier = email or mobile_number or ""
         try:
-            user = await self.user_repo.get_by_email(email)
+            if mobile_number:
+                user = await self.user_repo.get_by_mobile(mobile_number)
+            else:
+                user = await self.user_repo.get_by_email(email or "")
             if not user:
                 raise AuthenticationException("Incorrect email or password")
 
@@ -51,7 +61,10 @@ class AuthService:
                     action=audit_actions.LOGIN_SUCCESS,
                     entity_type="User",
                     entity_id=str(user.id),
-                    metadata={"email": email},
+                    metadata={
+                        "email": user.email,
+                        "mobile_number": user.mobile_number,
+                    },
                 )
             return user
         except AuthenticationException as e:
@@ -60,9 +73,72 @@ class AuthService:
                     user_id=None,
                     action=audit_actions.LOGIN_FAILURE,
                     entity_type="User",
-                    metadata={"email": email, "reason": e.message},
+                    metadata={"identifier": identifier, "reason": e.message},
                 )
             raise e
+
+    async def authenticate_user_by_mobile(self, mobile_number: str) -> User:
+        """Log in an end-user who registered with a verified mobile number."""
+        mobile = normalize_mobile(mobile_number)
+        identifier = mobile
+        try:
+            user = await self.user_repo.get_by_mobile(mobile)
+            if (
+                not user
+                or user.is_deleted
+                or not user.is_active
+                or not user.mobile_verified
+            ):
+                raise AuthenticationException(
+                    "No account found for this mobile number."
+                )
+            if user.is_superuser:
+                raise AuthenticationException(
+                    "Use email and password to sign in as staff."
+                )
+            return user
+        except AuthenticationException as e:
+            if self.audit_service:
+                await self.audit_service.log_action(
+                    user_id=None,
+                    action=audit_actions.LOGIN_FAILURE,
+                    entity_type="User",
+                    metadata={"identifier": identifier, "reason": e.message},
+                )
+            raise e
+
+    async def issue_tokens_for_user(
+        self, user: User, *, login_method: str = "mobile_otp"
+    ) -> Token:
+        """Issue a fresh access/refresh token pair after successful authentication."""
+        if not user.is_active or user.is_deleted:
+            raise AuthenticationException("User account is inactive or not found")
+
+        if self.audit_service:
+            await self.audit_service.log_action(
+                user_id=user.id,
+                action=audit_actions.LOGIN_SUCCESS,
+                entity_type="User",
+                entity_id=str(user.id),
+                metadata={
+                    "email": user.email,
+                    "mobile_number": user.mobile_number,
+                    "method": login_method,
+                },
+            )
+
+        jti = str(uuid.uuid4())
+        token_version = user.token_version or 0
+        access_token = create_access_token(
+            subject=user.id, token_version=token_version
+        )
+        refresh_token = create_refresh_token(
+            subject=user.id, jti=jti, token_version=token_version
+        )
+        return Token(
+            access_token=access_token,
+            refresh_token=refresh_token,
+        )
 
     async def refresh_tokens(self, refresh_token_str: str) -> Token:
         """Perform refresh token rotation (RTR) and return a new token pair."""

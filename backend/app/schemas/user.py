@@ -53,6 +53,8 @@ class UserDetailResponse(BaseModel):
 
     id: uuid.UUID
     email: str
+    mobile_number: Optional[str] = None
+    mobile_verified: bool = False
     first_name: Optional[str] = None
     last_name: Optional[str] = None
     is_active: bool

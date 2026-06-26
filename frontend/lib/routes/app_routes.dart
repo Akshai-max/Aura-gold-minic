@@ -4,13 +4,35 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ags_gold/services/service_providers.dart';
 import 'package:ags_gold/features/splash/presentation/splash_screen.dart';
 import 'package:ags_gold/features/auth/presentation/login_screen.dart';
+import 'package:ags_gold/features/auth/presentation/signup_screen.dart';
+import 'package:ags_gold/features/auth/presentation/role_selection_screen.dart';
+import 'package:ags_gold/features/auth/domain/app_audience.dart';
+import 'package:ags_gold/features/auth/presentation/providers/app_audience_provider.dart';
 import 'package:ags_gold/features/dashboard/presentation/dashboard_screen.dart';
+import 'package:ags_gold/features/user_dashboard/presentation/live_price_screen.dart';
+import 'package:ags_gold/features/user_dashboard/domain/metal_prices.dart';
+import 'package:ags_gold/features/user_dashboard/presentation/user_dashboard_screen.dart';
+import 'package:ags_gold/features/user_dashboard/presentation/buy_gold_screen.dart';
+import 'package:ags_gold/features/user_dashboard/domain/kyc_status.dart';
+import 'package:ags_gold/features/user_dashboard/presentation/providers/kyc_provider.dart';
+import 'package:ags_gold/features/user_dashboard/presentation/kyc_verification_screen.dart';
+import 'package:ags_gold/features/user_dashboard/presentation/sell_gold_inquiry_screen.dart';
+import 'package:ags_gold/features/user_dashboard/presentation/sell_gold_screen.dart';
+import 'package:ags_gold/features/user_dashboard/presentation/my_savings_screen.dart';
+import 'package:ags_gold/features/user_dashboard/presentation/user_transactions_screen.dart';
+import 'package:ags_gold/features/user_dashboard/presentation/bank_accounts_screen.dart';
+import 'package:ags_gold/features/user_dashboard/presentation/add_bank_account_screen.dart';
 import 'package:ags_gold/features/profile/presentation/profile_screen.dart';
+import 'package:ags_gold/features/legal/presentation/privacy_policy_screen.dart';
+import 'package:ags_gold/features/admin/presentation/payment_settlements_screen.dart';
+import 'package:ags_gold/features/admin/presentation/sell_inquiries_screen.dart';
 import 'package:ags_gold/features/admin/presentation/users_screen.dart';
 import 'package:ags_gold/features/admin/presentation/roles_screen.dart';
 import 'package:ags_gold/features/admin/presentation/permissions_screen.dart';
 import 'package:ags_gold/features/audit_logs/presentation/audit_logs_screen.dart';
 import 'package:ags_gold/features/settings/presentation/settings_screen.dart';
+import 'package:ags_gold/features/legal/presentation/digi_gold_terms_screen.dart';
+import 'package:ags_gold/features/referral/presentation/refer_and_earn_screen.dart';
 import 'package:ags_gold/features/customers/presentation/customers_screen.dart';
 import 'package:ags_gold/features/customers/presentation/customer_detail_screen.dart';
 import 'package:ags_gold/features/customers/presentation/customer_form_screen.dart';
@@ -30,51 +52,219 @@ import 'package:ags_gold/features/workflows/presentation/workflows_screen.dart';
 import 'package:ags_gold/features/workflows/presentation/workflow_detail_screen.dart';
 import 'package:ags_gold/features/workflows/presentation/workflow_form_screen.dart';
 import 'package:ags_gold/features/workflows/presentation/workflow_permission_gate.dart';
+import 'package:ags_gold/l10n/app_localizations.dart';
+import 'package:ags_gold/core/widgets/kyc_trading_gate.dart';
 import 'package:ags_gold/core/widgets/permission_gate.dart';
+import 'package:ags_gold/core/logging/app_event_log.dart';
+
+String? _lastLoggedNavigationPath;
+
+void _logNavigation(GoRouterState state) {
+  final location = state.matchedLocation;
+  if (location == _lastLoggedNavigationPath) return;
+  final query = state.uri.queryParameters;
+  AppEventLog.screen(
+    location,
+    from: _lastLoggedNavigationPath,
+    data: query.isNotEmpty ? Map<String, Object?>.from(query) : null,
+  );
+  _lastLoggedNavigationPath = location;
+}
 
 final routerProvider = Provider<GoRouter>((ref) {
-  final authState = ref.watch(authNotifierProvider);
+  ref.watch(authNotifierProvider);
+  ref.watch(appAudienceProvider);
 
   // Use a ValueNotifier to notify GoRouter when authentication status changes
-  final listenable = ValueNotifier<AsyncValue<AuthStatus>>(authState);
+  final listenable = ValueNotifier<int>(0);
 
-  ref.listen<AsyncValue<AuthStatus>>(authNotifierProvider, (previous, next) {
-    listenable.value = next;
+  ref.listen<AsyncValue<AuthStatus>>(authNotifierProvider, (_, _) {
+    listenable.value++;
+  });
+  ref.listen<AppAudience?>(appAudienceProvider, (_, _) {
+    listenable.value++;
+  });
+  ref.listen(userKycGateProvider, (_, _) {
+    listenable.value++;
   });
 
   ref.onDispose(() {
     listenable.dispose();
   });
 
+  String? homeRouteForAudience(AppAudience? audience, KycStatusDetails? kyc) {
+    if (audience == AppAudience.staffAdmin) return '/dashboard';
+    return '/user-dashboard';
+  }
+
   return GoRouter(
     initialLocation: '/',
     refreshListenable: listenable,
     redirect: (context, state) {
+      _logNavigation(state);
+
       final authValue = ref.read(authNotifierProvider);
       final status = authValue.value ?? AuthStatus.initial;
+      final audience = ref.read(appAudienceProvider);
+      final kycGate = ref.read(userKycGateProvider);
 
-      final isLoggingIn = state.matchedLocation == '/login';
-      final isSplash = state.matchedLocation == '/';
+      final location = state.matchedLocation;
+      final isSplash = location == '/';
+      final isWelcome = location == '/welcome';
+      final isLogin = location == '/login';
+      final isSignup = location == '/signup';
+      final isTerms = location == '/terms-and-conditions';
+      final isPrivacy = location == '/privacy-policy';
+      final isPublicPage = isTerms || isPrivacy;
+      final isAuthFlow = isWelcome || isLogin || isSignup || isPublicPage;
 
-      if (authValue.isLoading || status == AuthStatus.initial) {
+      if (authValue.isLoading) {
         return isSplash ? null : '/';
       }
 
-      if (status == AuthStatus.unauthenticated) {
-        return isLoggingIn ? null : '/login';
+      if (authValue.hasError) {
+        return isSplash ? '/welcome' : null;
+      }
+
+      if (status == AuthStatus.initial) {
+        return isSplash ? null : '/';
       }
 
       if (status == AuthStatus.authenticated) {
-        if (isLoggingIn || isSplash) {
-          return '/dashboard';
+        if (isSplash || isWelcome || isLogin || isSignup) {
+          return homeRouteForAudience(audience, kycGate.asData?.value);
         }
+        if (audience == AppAudience.endUser && location.startsWith('/dashboard')) {
+          return '/user-dashboard';
+        }
+        if (audience == AppAudience.endUser) {
+          const staffRoutes = [
+            '/audit-logs',
+            '/customers',
+            '/inventory',
+            '/suppliers',
+            '/transactions',
+            '/reports',
+            '/workflows',
+            '/admin/',
+            '/settings',
+          ];
+          if (staffRoutes.any(location.startsWith)) {
+            return '/user-dashboard';
+          }
+
+          final kyc = kycGate.asData?.value;
+          final isTradingRoute =
+              location == '/buy-gold' || location == '/sell-gold';
+          if (isTradingRoute && (kyc == null || !kyc.status.isComplete)) {
+            return '/user-dashboard';
+          }
+        }
+        return null;
       }
 
-      return null;
+      if (isSplash) {
+        return '/welcome';
+      }
+
+      if (audience == AppAudience.staffAdmin && isSignup) {
+        return '/login';
+      }
+
+      if (isAuthFlow) {
+        return null;
+      }
+
+      if (audience == null) {
+        return '/welcome';
+      }
+
+      return '/login';
     },
     routes: [
       GoRoute(path: '/', builder: (context, state) => const SplashScreen()),
-      GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
+      GoRoute(
+        path: '/welcome',
+        builder: (context, state) => const RoleSelectionScreen(),
+      ),
+      GoRoute(
+        path: '/login',
+        builder: (context, state) {
+          final message = state.extra is String ? state.extra as String : null;
+          return LoginScreen(successMessage: message);
+        },
+      ),
+      GoRoute(
+        path: '/signup',
+        builder: (context, state) {
+          final refCode = state.uri.queryParameters['ref'];
+          final schemeRaw = state.uri.queryParameters['scheme'];
+          return SignupScreen(
+            initialReferralCode: refCode,
+            initialReferralSchemeGrams: int.tryParse(schemeRaw ?? ''),
+          );
+        },
+      ),
+      GoRoute(
+        path: '/refer-and-earn',
+        builder: (context, state) => const ReferAndEarnScreen(),
+      ),
+      GoRoute(
+        path: '/terms-and-conditions',
+        builder: (context, state) => const DigiGoldTermsScreen(),
+      ),
+      GoRoute(
+        path: '/user-dashboard',
+        builder: (context, state) => const UserDashboardScreen(),
+      ),
+      GoRoute(
+        path: '/live-price',
+        builder: (context, state) {
+          final metalParam = state.uri.queryParameters['metal'];
+          final initialMetal = metalParam == 'silver'
+              ? MetalType.silver
+              : MetalType.gold;
+          return LivePriceScreen(initialMetal: initialMetal);
+        },
+      ),
+      GoRoute(
+        path: '/kyc',
+        builder: (context, state) => const KycVerificationScreen(),
+      ),
+      GoRoute(
+        path: '/buy-gold',
+        builder: (context, state) => KycTradingGate(
+          title: AppLocalizations.of(context).buyGold,
+          child: const BuyGoldScreen(),
+        ),
+      ),
+      GoRoute(
+        path: '/sell-gold-inquiry',
+        builder: (context, state) => const SellGoldInquiryScreen(),
+      ),
+      GoRoute(
+        path: '/sell-gold',
+        builder: (context, state) => KycTradingGate(
+          title: AppLocalizations.of(context).sellGold,
+          child: const SellGoldScreen(),
+        ),
+      ),
+      GoRoute(
+        path: '/my-savings',
+        builder: (context, state) => const MySavingsScreen(),
+      ),
+      GoRoute(
+        path: '/user-transactions',
+        builder: (context, state) => const UserTransactionsScreen(),
+      ),
+      GoRoute(
+        path: '/bank-accounts',
+        builder: (context, state) => const BankAccountsScreen(),
+      ),
+      GoRoute(
+        path: '/bank-accounts/add',
+        builder: (context, state) => const AddBankAccountScreen(),
+      ),
       GoRoute(
         path: '/dashboard',
         builder: (context, state) => const PermissionGate(
@@ -85,6 +275,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/profile',
         builder: (context, state) => const ProfileScreen(),
+      ),
+      GoRoute(
+        path: '/privacy-policy',
+        builder: (context, state) => const PrivacyPolicyScreen(),
       ),
       GoRoute(
         path: '/audit-logs',
@@ -239,6 +433,20 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/settings',
         builder: (context, state) => const SettingsScreen(),
+      ),
+      GoRoute(
+        path: '/admin/payment-settlements',
+        builder: (context, state) => const PermissionGate(
+          requiredPermission: 'transaction.view',
+          child: PaymentSettlementsScreen(),
+        ),
+      ),
+      GoRoute(
+        path: '/admin/sell-inquiries',
+        builder: (context, state) => const PermissionGate(
+          requiredPermission: 'transaction.view',
+          child: SellInquiriesScreen(),
+        ),
       ),
       GoRoute(
         path: '/admin/users',

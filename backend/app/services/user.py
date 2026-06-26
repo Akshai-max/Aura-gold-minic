@@ -1,6 +1,7 @@
-import uuid
+from decimal import Decimal
 from datetime import datetime, timezone
 from typing import List, Optional
+import uuid
 
 from app.core.exceptions import (
     ForbiddenException,
@@ -13,6 +14,7 @@ from app.repositories.user import UserRepository
 from app.repositories.role import RoleRepository
 from app.schemas.user import UserCreate, UserUpdate
 from app.services.audit import AuditService
+from app.services.referral import ReferralService
 
 
 class UserService:
@@ -23,10 +25,12 @@ class UserService:
         user_repo: UserRepository,
         role_repo: RoleRepository,
         audit_service: Optional[AuditService] = None,
+        referral_service: Optional[ReferralService] = None,
     ):
         self.user_repo = user_repo
         self.role_repo = role_repo
         self.audit_service = audit_service
+        self.referral_service = referral_service
 
     async def create_user(
         self, user_in: UserCreate, performing_user_id: Optional[uuid.UUID] = None
@@ -68,6 +72,51 @@ class UserService:
             )
 
         return user
+
+    async def register_public_user(
+        self,
+        email: str,
+        password: str,
+        mobile_number: str,
+        name: str,
+        first_name: Optional[str] = None,
+        last_name: Optional[str] = None,
+        referral_code: Optional[str] = None,
+        referral_scheme_grams: Optional[int] = None,
+    ) -> User:
+        """Create a standard end-user account via public self-registration."""
+        user_role = await self.role_repo.get_by_name("user")
+        if not user_role:
+            raise ValidationException("Registration is temporarily unavailable")
+
+        existing_mobile = await self.user_repo.get_by_mobile(mobile_number)
+        if existing_mobile:
+            raise ValidationException("This mobile number is already registered")
+
+        if not first_name:
+            parts = name.strip().split(None, 1)
+            first_name = parts[0]
+            last_name = parts[1] if len(parts) > 1 else None
+
+        user_in = UserCreate(
+            email=email,
+            password=password,
+            first_name=first_name,
+            last_name=last_name,
+            roles=[user_role.id],
+        )
+        user = await self.create_user(user_in, performing_user_id=None)
+        user.mobile_number = mobile_number
+        user.mobile_verified = True
+        if self.referral_service:
+            await self.referral_service.apply_signup_referral(
+                user,
+                referral_code=referral_code,
+                scheme_grams=referral_scheme_grams,
+            )
+        else:
+            await self.user_repo.db.commit()
+        return await self.user_repo.get_with_roles_and_permissions(user.id)
 
     async def get_user_by_id(self, user_id: uuid.UUID) -> User:
         """Fetch active user by ID, raising NotFound if missing."""

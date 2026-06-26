@@ -22,7 +22,9 @@ class EnvConfig {
     if (override.isNotEmpty) return override;
 
     if (!kIsWeb && platform.isAndroid) {
-      return 'http://10.0.2.2:8000/api/v1';
+      // Emulator default: 10.0.2.2. Physical device: flutter run --dart-define=API_HOST=<your-pc-lan-ip>
+      const host = String.fromEnvironment('API_HOST', defaultValue: '10.0.2.2');
+      return 'http://$host:8000/api/v1';
     }
     return 'http://localhost:8000/api/v1';
   }

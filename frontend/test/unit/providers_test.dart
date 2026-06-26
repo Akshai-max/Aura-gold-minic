@@ -244,7 +244,7 @@ void main() {
       final notifier = container.read(authNotifierProvider.notifier);
 
       expect(
-        () => notifier.login('bad@email.com', 'wrong'),
+        () => notifier.login(email: 'bad@email.com', password: 'wrong'),
         throwsA(isA<UnauthorizedException>()),
       );
 
