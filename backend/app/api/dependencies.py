@@ -344,14 +344,6 @@ def get_app_metrics_repository(
     return AppMetricsRepository(db)
 
 
-def get_report_service(
-    report_repo: ReportRepository = Depends(get_report_repository),
-    audit_service: AuditService = Depends(get_audit_service),
-) -> ReportService:
-    """Dependency injecting the ReportService."""
-    return ReportService(report_repo, audit_service)
-
-
 def get_transaction_service(
     transaction_repo: TransactionRepository = Depends(get_transaction_repository),
     customer_repo: CustomerRepository = Depends(get_customer_repository),
@@ -455,6 +447,25 @@ def get_digital_metal_inventory_repository(
     db: AsyncSession = Depends(get_db_session),
 ) -> DigitalMetalInventoryRepository:
     return DigitalMetalInventoryRepository(db)
+
+
+def get_report_service(
+    report_repo: ReportRepository = Depends(get_report_repository),
+    app_metrics_repo: AppMetricsRepository = Depends(get_app_metrics_repository),
+    digital_inventory_repo: DigitalMetalInventoryRepository = Depends(
+        get_digital_metal_inventory_repository
+    ),
+    metal_price_service: MetalPriceService = Depends(get_metal_price_service),
+    audit_service: AuditService = Depends(get_audit_service),
+) -> ReportService:
+    """Dependency injecting the ReportService."""
+    return ReportService(
+        report_repo,
+        app_metrics_repo,
+        digital_inventory_repo,
+        metal_price_service,
+        audit_service,
+    )
 
 
 def get_executive_dashboard_service(

@@ -1,3 +1,26 @@
+class MetricMethodology {
+  final String key;
+  final String title;
+  final String formula;
+  final String dataSource;
+
+  const MetricMethodology({
+    required this.key,
+    required this.title,
+    required this.formula,
+    required this.dataSource,
+  });
+
+  factory MetricMethodology.fromJson(Map<String, dynamic> json) {
+    return MetricMethodology(
+      key: json['key'] as String? ?? '',
+      title: json['title'] as String? ?? '',
+      formula: json['formula'] as String? ?? '',
+      dataSource: json['data_source'] as String? ?? '',
+    );
+  }
+}
+
 class KpiCard {
   final String key;
   final String label;
@@ -70,6 +93,11 @@ class AnalyticsOverview {
   final List<InventoryTrendPoint> inventoryTrend;
   final double? revenueGrowthPercent;
   final List<ActivityTrendPoint> activityTrend;
+  final List<MetricMethodology> methodology;
+  final double? dailyRevenue;
+  final double? monthlyRevenue;
+  final double? totalRevenue;
+  final double? metalInventoryValue;
 
   const AnalyticsOverview({
     this.kpis = const [],
@@ -77,6 +105,11 @@ class AnalyticsOverview {
     this.inventoryTrend = const [],
     this.revenueGrowthPercent,
     this.activityTrend = const [],
+    this.methodology = const [],
+    this.dailyRevenue,
+    this.monthlyRevenue,
+    this.totalRevenue,
+    this.metalInventoryValue,
   });
 
   factory AnalyticsOverview.fromJson(Map<String, dynamic> json) {
@@ -96,6 +129,21 @@ class AnalyticsOverview {
       activityTrend: (json['activity_trend'] as List<dynamic>? ?? [])
           .map((e) => ActivityTrendPoint.fromJson(e as Map<String, dynamic>))
           .toList(),
+      methodology: (json['methodology'] as List<dynamic>? ?? [])
+          .map((e) => MetricMethodology.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      dailyRevenue: json['daily_revenue'] != null
+          ? _parseDecimal(json['daily_revenue'])
+          : null,
+      monthlyRevenue: json['monthly_revenue'] != null
+          ? _parseDecimal(json['monthly_revenue'])
+          : null,
+      totalRevenue: json['total_revenue'] != null
+          ? _parseDecimal(json['total_revenue'])
+          : null,
+      metalInventoryValue: json['metal_inventory_value'] != null
+          ? _parseDecimal(json['metal_inventory_value'])
+          : null,
     );
   }
 }
@@ -118,19 +166,25 @@ class RevenueReport {
   final DateTime periodStart;
   final DateTime periodEnd;
   final double totalRevenue;
+  final double dailyRevenue;
+  final double monthlyRevenue;
   final int transactionCount;
   final double? revenueGrowthPercent;
   final List<RevenueTrendPoint> dailyTrend;
   final List<Map<String, dynamic>> topCustomers;
+  final List<MetricMethodology> methodology;
 
   const RevenueReport({
     required this.periodStart,
     required this.periodEnd,
     required this.totalRevenue,
+    this.dailyRevenue = 0,
+    this.monthlyRevenue = 0,
     required this.transactionCount,
     this.revenueGrowthPercent,
     this.dailyTrend = const [],
     this.topCustomers = const [],
+    this.methodology = const [],
   });
 
   factory RevenueReport.fromJson(Map<String, dynamic> json) {
@@ -138,6 +192,8 @@ class RevenueReport {
       periodStart: DateTime.parse(json['period_start'] as String),
       periodEnd: DateTime.parse(json['period_end'] as String),
       totalRevenue: _parseDecimal(json['total_revenue']),
+      dailyRevenue: _parseDecimal(json['daily_revenue']),
+      monthlyRevenue: _parseDecimal(json['monthly_revenue']),
       transactionCount: json['transaction_count'] as int? ?? 0,
       revenueGrowthPercent: json['revenue_growth_percent'] != null
           ? _parseDecimal(json['revenue_growth_percent'])
@@ -147,6 +203,9 @@ class RevenueReport {
           .toList(),
       topCustomers: (json['top_customers'] as List<dynamic>? ?? [])
           .map((e) => e as Map<String, dynamic>)
+          .toList(),
+      methodology: (json['methodology'] as List<dynamic>? ?? [])
+          .map((e) => MetricMethodology.fromJson(e as Map<String, dynamic>))
           .toList(),
     );
   }
@@ -159,6 +218,8 @@ class InventoryReport {
   final int itemCount;
   final List<Map<String, dynamic>> byCategory;
   final List<InventoryTrendPoint> movementTrend;
+  final List<Map<String, dynamic>> metalBreakdown;
+  final String valuationFormula;
 
   const InventoryReport({
     required this.totalStock,
@@ -167,6 +228,8 @@ class InventoryReport {
     required this.itemCount,
     this.byCategory = const [],
     this.movementTrend = const [],
+    this.metalBreakdown = const [],
+    this.valuationFormula = '',
   });
 
   factory InventoryReport.fromJson(Map<String, dynamic> json) {
@@ -181,6 +244,10 @@ class InventoryReport {
       movementTrend: (json['movement_trend'] as List<dynamic>? ?? [])
           .map((e) => InventoryTrendPoint.fromJson(e as Map<String, dynamic>))
           .toList(),
+      metalBreakdown: (json['metal_breakdown'] as List<dynamic>? ?? [])
+          .map((e) => e as Map<String, dynamic>)
+          .toList(),
+      valuationFormula: json['valuation_formula'] as String? ?? '',
     );
   }
 }

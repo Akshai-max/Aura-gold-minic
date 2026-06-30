@@ -1,6 +1,7 @@
 import time
 import uuid
 from datetime import datetime, timedelta, timezone
+from decimal import Decimal
 from typing import Optional
 
 from app.core import audit_actions
@@ -8,7 +9,10 @@ from app.core.config import settings
 from app.core.exceptions import ForbiddenException, ValidationException
 from app.core.permissions import user_has_permission
 from app.models.user import User
+from app.repositories.app_metrics import AppMetricsRepository
+from app.repositories.digital_metal_inventory import DigitalMetalInventoryRepository
 from app.repositories.report import ReportRepository
+from app.schemas.digital_metal_inventory import compute_stock_status
 from app.schemas.report import (
     AnalyticsOverviewResponse,
     AuditBreakdownRow,
@@ -21,6 +25,8 @@ from app.schemas.report import (
     InventoryTrendPoint,
     KpiCard,
     ActivityTrendPoint,
+    MetalStockRow,
+    MetricMethodology,
     ReportType,
     RevenueReportResponse,
     RevenueTrendPoint,
@@ -28,6 +34,7 @@ from app.schemas.report import (
     TransactionReportResponse,
 )
 from app.services.audit import AuditService
+from app.services.metal_prices import MetalPriceService
 from app.utils.report_export import (
     MEDIA_TYPES,
     export_filename,
@@ -38,6 +45,36 @@ from app.utils.report_export import (
 
 _cache: dict[str, tuple[float, AnalyticsOverviewResponse]] = {}
 
+_APP_REVENUE_METHODOLOGY = [
+    MetricMethodology(
+        key="total_revenue",
+        title="Total App Revenue",
+        formula="SUM(amount_paise) ÷ 100 for payment_orders where status = paid",
+        data_source="payment_orders (Razorpay gold/silver purchases)",
+    ),
+    MetricMethodology(
+        key="daily_revenue",
+        title="Daily Revenue",
+        formula="Paid order revenue where paid_at (or created_at) is today (UTC)",
+        data_source="payment_orders",
+    ),
+    MetricMethodology(
+        key="monthly_revenue",
+        title="Monthly Revenue",
+        formula="Paid order revenue from the 1st of this month through today",
+        data_source="payment_orders",
+    ),
+]
+
+_METAL_INVENTORY_METHODOLOGY = [
+    MetricMethodology(
+        key="metal_inventory_value",
+        title="Metal Inventory Value",
+        formula="Σ (available grams × current retail rate per gram) for gold and silver",
+        data_source="digital_metal_inventory + live metal prices",
+    ),
+]
+
 
 class ReportService:
     """Reports and analytics aggregation with export support."""
@@ -45,10 +82,44 @@ class ReportService:
     def __init__(
         self,
         report_repo: ReportRepository,
+        app_metrics_repo: AppMetricsRepository,
+        digital_inventory_repo: DigitalMetalInventoryRepository,
+        metal_price_service: MetalPriceService,
         audit_service: Optional[AuditService] = None,
     ):
         self.report_repo = report_repo
+        self.app_metrics_repo = app_metrics_repo
+        self.digital_inventory_repo = digital_inventory_repo
+        self.metal_price_service = metal_price_service
         self.audit_service = audit_service
+
+    async def _digital_metal_summary(self) -> tuple[Decimal, list[MetalStockRow], int]:
+        metals = await self.digital_inventory_repo.list_all()
+        prices = await self.metal_price_service.get_prices()
+        price_by_metal = {
+            "gold": prices.gold.retail_price,
+            "silver": prices.silver.retail_price,
+        }
+        total_value = Decimal("0")
+        rows: list[MetalStockRow] = []
+        low_stock_count = 0
+        for row in metals:
+            available = row.available_weight_grams
+            rate = price_by_metal.get(row.metal_type, Decimal("0"))
+            value = available * rate
+            total_value += value
+            rows.append(
+                MetalStockRow(
+                    metal_type=row.metal_type.upper(),
+                    available_grams=available,
+                    rate_per_gram=rate,
+                    value_inr=value,
+                )
+            )
+            status = compute_stock_status(available, row.low_stock_threshold_grams)
+            if status in {"low_stock", "out_of_stock"}:
+                low_stock_count += 1
+        return total_value, rows, low_stock_count
 
     def _require(self, user: User, permission: str) -> None:
         if not user_has_permission(user, permission):
@@ -72,8 +143,17 @@ class ReportService:
         revenue_trend: list[RevenueTrendPoint] = []
         inventory_trend: list[InventoryTrendPoint] = []
         revenue_growth = None
+        methodology: list[MetricMethodology] = []
+        daily_revenue = None
+        monthly_revenue = None
+        total_revenue = None
+        metal_inventory_value = None
 
-        if user_has_permission(user, "transaction.view"):
+        can_view_app = user_has_permission(user, "transaction.view") or user_has_permission(
+            user, "wallet.view"
+        )
+
+        if can_view_app:
             now_dt = datetime.now(timezone.utc)
             day_start = now_dt.replace(hour=0, minute=0, second=0, microsecond=0)
             day_end = day_start.replace(
@@ -81,12 +161,17 @@ class ReportService:
             )
             month_start = day_start.replace(day=1)
 
-            daily = await self.report_repo.revenue_period_summary(day_start, day_end)
-            monthly = await self.report_repo.revenue_period_summary(
-                month_start, day_end
+            daily = await self.app_metrics_repo.paid_revenue_period_summary(
+                start=day_start, end=day_end
             )
-            revenue_growth = await self.report_repo.revenue_growth_percent()
-            trend_rows = await self.report_repo.revenue_trend(days=30)
+            monthly = await self.app_metrics_repo.paid_revenue_period_summary(
+                start=month_start, end=day_end
+            )
+            total_revenue = await self.app_metrics_repo.paid_revenue_sum()
+            daily_revenue = daily["total_revenue"]
+            monthly_revenue = monthly["total_revenue"]
+            revenue_growth = await self.app_metrics_repo.payment_revenue_growth_percent()
+            trend_rows = await self.app_metrics_repo.payment_revenue_trend(days=30)
             revenue_trend = [
                 RevenueTrendPoint(
                     label=r["label"],
@@ -95,20 +180,28 @@ class ReportService:
                 )
                 for r in trend_rows
             ]
+            methodology.extend(_APP_REVENUE_METHODOLOGY)
             kpis.extend(
                 [
                     KpiCard(
                         key="daily_revenue",
-                        label="Daily Revenue",
+                        label="Daily App Revenue",
                         value=f"₹{daily['total_revenue']:,.0f}",
-                        trend_label="Today",
+                        trend_label=f"{daily['transaction_count']} paid buys today",
                         trend_positive=True,
                     ),
                     KpiCard(
                         key="monthly_revenue",
-                        label="Monthly Revenue",
+                        label="Monthly App Revenue",
                         value=f"₹{monthly['total_revenue']:,.0f}",
-                        trend_label="This month",
+                        trend_label=f"{monthly['transaction_count']} paid buys this month",
+                        trend_positive=True,
+                    ),
+                    KpiCard(
+                        key="total_revenue",
+                        label="Total App Revenue",
+                        value=f"₹{total_revenue:,.0f}",
+                        trend_label="All-time paid purchases",
                         trend_positive=True,
                     ),
                 ]
@@ -119,53 +212,45 @@ class ReportService:
                         key="revenue_growth",
                         label="Revenue Growth",
                         value=f"{revenue_growth:+.1f}%",
-                        trend_label="vs last month",
+                        trend_label="Paid buys vs last month",
                         trend_positive=revenue_growth >= 0,
                     )
                 )
 
         if user_has_permission(user, "inventory.view"):
-            inv = await self.report_repo.inventory_summary()
-            inv_trend = await self.report_repo.inventory_movement_trend(days=30)
-            inventory_trend = [InventoryTrendPoint(**row) for row in inv_trend]
+            metal_value, metal_rows, low_stock_count = await self._digital_metal_summary()
+            metal_inventory_value = metal_value
+            methodology.extend(_METAL_INVENTORY_METHODOLOGY)
             kpis.extend(
                 [
                     KpiCard(
-                        key="inventory_value",
-                        label="Inventory Value",
-                        value=f"₹{inv['inventory_value']:,.0f}",
-                        trend_label=f"{inv['total_stock']} units",
+                        key="metal_inventory_value",
+                        label="Metal Inventory Value",
+                        value=f"₹{metal_value:,.0f}",
+                        trend_label="Digital gold + silver stock",
                         trend_positive=True,
                     ),
                     KpiCard(
                         key="low_stock",
-                        label="Low Stock Items",
-                        value=str(inv["low_stock_count"]),
-                        trend_label="Alert",
-                        trend_positive=inv["low_stock_count"] == 0,
+                        label="Metal Stock Alerts",
+                        value=str(low_stock_count),
+                        trend_label="Low or out of stock metals",
+                        trend_positive=low_stock_count == 0,
                     ),
                 ]
             )
-
-        if user_has_permission(user, "customer.view"):
-            cust = await self.report_repo.customer_summary()
-            kpis.append(
-                KpiCard(
-                    key="active_customers",
-                    label="Active Customers",
-                    value=str(cust["active_customers"]),
-                    trend_label=f"{cust['total_customers']} total",
-                    trend_positive=True,
+            for row in metal_rows:
+                kpis.append(
+                    KpiCard(
+                        key=f"metal_{row.metal_type.lower()}",
+                        label=f"{row.metal_type} Available",
+                        value=f"{row.available_grams:,.2f} g",
+                        trend_label=f"₹{row.rate_per_gram:,.0f}/g → ₹{row.value_inr:,.0f}",
+                        trend_positive=True,
+                    )
                 )
-            )
 
         activity_trend: list[ActivityTrendPoint] = []
-        if user_has_permission(user, "audit.view") and self.audit_service:
-            raw_trend = await self.audit_service.get_activity_trend(days=7)
-            activity_trend = [
-                ActivityTrendPoint(label=row["label"], count=int(row["count"]))
-                for row in raw_trend
-            ]
 
         overview = AnalyticsOverviewResponse(
             kpis=kpis,
@@ -173,6 +258,11 @@ class ReportService:
             inventory_trend=inventory_trend,
             revenue_growth_percent=revenue_growth,
             activity_trend=activity_trend,
+            methodology=methodology,
+            daily_revenue=daily_revenue,
+            monthly_revenue=monthly_revenue,
+            total_revenue=total_revenue,
+            metal_inventory_value=metal_inventory_value,
         )
         _cache[cache_key] = (now, overview)
         return overview
@@ -184,17 +274,37 @@ class ReportService:
         end: Optional[datetime] = None,
     ) -> RevenueReportResponse:
         self._require(user, "report.view")
-        self._require(user, "transaction.view")
+        if not (
+            user_has_permission(user, "transaction.view")
+            or user_has_permission(user, "wallet.view")
+        ):
+            raise ForbiddenException("You do not have permission: transaction.view")
+
+        now_dt = datetime.now(timezone.utc)
+        day_start = now_dt.replace(hour=0, minute=0, second=0, microsecond=0)
+        day_end = day_start.replace(hour=23, minute=59, second=59, microsecond=999999)
+        month_start = day_start.replace(day=1)
+
         start_dt, end_dt = self._default_period(start, end, days=30)
-        summary = await self.report_repo.revenue_period_summary(start_dt, end_dt)
-        trend = await self.report_repo.revenue_trend(days=30)
-        top = await self.report_repo.top_customers_report(limit=10)
-        growth = await self.report_repo.revenue_growth_percent()
+        period = await self.app_metrics_repo.paid_revenue_period_summary(
+            start=start_dt, end=end_dt
+        )
+        daily = await self.app_metrics_repo.paid_revenue_period_summary(
+            start=day_start, end=day_end
+        )
+        monthly = await self.app_metrics_repo.paid_revenue_period_summary(
+            start=month_start, end=day_end
+        )
+        total_all_time = await self.app_metrics_repo.paid_revenue_sum()
+        trend = await self.app_metrics_repo.payment_revenue_trend(days=30)
+        growth = await self.app_metrics_repo.payment_revenue_growth_percent()
         return RevenueReportResponse(
             period_start=start_dt,
             period_end=end_dt,
-            total_revenue=summary["total_revenue"],
-            transaction_count=summary["transaction_count"],
+            total_revenue=total_all_time,
+            daily_revenue=daily["total_revenue"],
+            monthly_revenue=monthly["total_revenue"],
+            transaction_count=period["transaction_count"],
             revenue_growth_percent=growth,
             daily_trend=[
                 RevenueTrendPoint(
@@ -204,22 +314,27 @@ class ReportService:
                 )
                 for r in trend
             ],
-            top_customers=top,
+            top_customers=[],
+            methodology=_APP_REVENUE_METHODOLOGY,
         )
 
     async def get_inventory_report(self, user: User) -> InventoryReportResponse:
         self._require(user, "report.view")
         self._require(user, "inventory.view")
-        summary = await self.report_repo.inventory_summary()
-        by_cat = await self.report_repo.inventory_by_category()
-        trend = await self.report_repo.inventory_movement_trend(days=30)
+        metal_value, metal_rows, low_stock_count = await self._digital_metal_summary()
+        total_grams = sum((row.available_grams for row in metal_rows), Decimal("0"))
         return InventoryReportResponse(
-            total_stock=summary["total_stock"],
-            inventory_value=summary["inventory_value"],
-            low_stock_count=summary["low_stock_count"],
-            item_count=summary["item_count"],
-            by_category=[InventoryCategoryRow(**row) for row in by_cat],
-            movement_trend=[InventoryTrendPoint(**row) for row in trend],
+            total_stock=int(total_grams),
+            inventory_value=metal_value,
+            low_stock_count=low_stock_count,
+            item_count=len(metal_rows),
+            by_category=[],
+            movement_trend=[],
+            metal_breakdown=metal_rows,
+            valuation_formula=(
+                "Metal inventory value = Σ (available grams × retail rate per gram) "
+                "for each metal in digital_metal_inventory"
+            ),
         )
 
     async def get_customer_report(self, user: User) -> CustomerReportResponse:
@@ -287,35 +402,25 @@ class ReportService:
 
         if report_type == "revenue":
             report = await self.get_revenue_report(user, start, end)
-            headers = ["Date", "Revenue", "Transactions"]
+            headers = ["Date", "Revenue (INR)", "Paid Buys"]
             rows = [
                 [p.label, p.revenue, p.transaction_count] for p in report.daily_trend
             ]
-            for tc in report.top_customers:
-                rows.append(
-                    [
-                        f"TOP: {tc['full_name']}",
-                        tc["revenue"],
-                        tc["transaction_count"],
-                    ]
-                )
+            rows.insert(0, ["Daily", report.daily_revenue, "—"])
+            rows.insert(1, ["Monthly", report.monthly_revenue, "—"])
+            rows.insert(2, ["All-time", report.total_revenue, report.transaction_count])
             return headers, rows, len(rows), False
 
         if report_type == "inventory":
             report = await self.get_inventory_report(user)
-            headers = ["Category", "Items", "Stock", "Value"]
+            headers = ["Metal", "Available (g)", "Rate/g (INR)", "Value (INR)"]
             rows = [
-                [c.category, c.item_count, c.total_stock, c.category_value]
-                for c in report.by_category
+                [m.metal_type, m.available_grams, m.rate_per_gram, m.value_inr]
+                for m in report.metal_breakdown
             ]
             rows.insert(
                 0,
-                [
-                    "SUMMARY",
-                    report.item_count,
-                    report.total_stock,
-                    report.inventory_value,
-                ],
+                ["TOTAL", report.total_stock, "—", report.inventory_value],
             )
             return headers, rows, len(rows), False
 

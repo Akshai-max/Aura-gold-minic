@@ -156,8 +156,14 @@ List<AppNavDestination> buildNavDestinations(
 
   return all.where((d) {
     if (!visible(d.requiredPermission)) return false;
-    if (audience == AppAudience.staffAdmin && d.routePrefix == '/user-dashboard') {
-      return false;
+    if (audience == AppAudience.staffAdmin) {
+      const hiddenForStaffAdmin = {
+        '/user-dashboard',
+        '/customers',
+        '/audit-logs',
+        '/workflows',
+      };
+      if (hiddenForStaffAdmin.contains(d.routePrefix)) return false;
     }
     if (audience == AppAudience.endUser) {
       const staffOnlyRoutes = {

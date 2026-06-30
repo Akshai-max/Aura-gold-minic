@@ -47,6 +47,33 @@ class AppMetricsRepository:
         paise = int(result.scalar_one() or 0)
         return Decimal(paise) / Decimal("100")
 
+    async def count_paid_orders(
+        self,
+        *,
+        start: Optional[datetime] = None,
+        end: Optional[datetime] = None,
+    ) -> int:
+        ts_col = func.coalesce(PaymentOrder.paid_at, PaymentOrder.created_at)
+        query = select(func.count()).select_from(PaymentOrder).where(
+            PaymentOrder.status == "paid"
+        )
+        if start is not None:
+            query = query.where(ts_col >= start)
+        if end is not None:
+            query = query.where(ts_col <= end)
+        result = await self.db.execute(query)
+        return int(result.scalar_one() or 0)
+
+    async def paid_revenue_period_summary(
+        self,
+        *,
+        start: Optional[datetime] = None,
+        end: Optional[datetime] = None,
+    ) -> dict:
+        revenue = await self.paid_revenue_sum(start=start, end=end)
+        count = await self.count_paid_orders(start=start, end=end)
+        return {"total_revenue": revenue, "transaction_count": count}
+
     async def count_wallet_transactions(
         self,
         *,

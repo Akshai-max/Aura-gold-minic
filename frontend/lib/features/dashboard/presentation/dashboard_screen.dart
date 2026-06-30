@@ -26,7 +26,7 @@ class DashboardScreen extends ConsumerWidget {
   String _subtitle(ExecutiveRole role) {
     switch (role) {
       case ExecutiveRole.admin:
-        return 'Executive overview across revenue, customers, inventory, and transactions.';
+        return 'Executive overview across app revenue, members, metal inventory, and wallet activity.';
       case ExecutiveRole.manager:
         return 'Monitor team performance, approval queues, and inventory risk.';
       case ExecutiveRole.employee:
