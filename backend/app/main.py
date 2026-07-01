@@ -32,6 +32,7 @@ from app.api.bank_accounts import router as bank_accounts_router
 from app.api.gold_scheme import router as gold_scheme_router
 from app.api.referrals import router as referrals_router
 from app.api.sell_inquiries import router as sell_inquiries_router
+from app.api.app_release import router as app_release_router
 from app.database.session import verify_db_connection, async_session_maker
 from app.database import base as db_base  # noqa: F401
 from app.repositories.token_blacklist import TokenBlacklistRepository
@@ -196,4 +197,9 @@ app.include_router(
     sell_inquiries_router,
     prefix=f"{settings.API_V1_STR}/sell-inquiries",
     tags=["sell-inquiries"],
+)
+app.include_router(
+    app_release_router,
+    prefix=f"{settings.API_V1_STR}/app",
+    tags=["app"],
 )

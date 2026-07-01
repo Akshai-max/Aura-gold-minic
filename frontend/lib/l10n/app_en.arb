@@ -128,6 +128,29 @@
   "goldHoldingsSchemeActiveFooter": "Keep buying until your scheme target is complete.",
   "goldSchemeBuyBlockedTitle": "Choose your gold scheme first",
   "goldSchemeBuyBlockedBody": "Select a 1 g, 5 g, or 10 g plan on your dashboard before purchasing gold.",
+  "goldSchemeCompletionTitle": "{grams} g scheme completed!",
+  "@goldSchemeCompletionTitle": {
+    "placeholders": {
+      "grams": {"type": "String"}
+    }
+  },
+  "goldSchemeCompletionBody": "Would you like to sell your gold or start a higher savings plan?",
+  "goldSchemeCompletionBodyMaxTier": "You completed the highest plan. Sell your gold or keep holding.",
+  "goldSchemeCompletionSell": "Sell gold",
+  "goldSchemeCompletionUpgrade": "Start {grams} g plan",
+  "@goldSchemeCompletionUpgrade": {
+    "placeholders": {
+      "grams": {"type": "int"}
+    }
+  },
+  "goldSchemeCompletionStay": "Stay on dashboard",
+  "goldSchemeUpgraded": "{grams} g gold scheme activated.",
+  "@goldSchemeUpgraded": {
+    "placeholders": {
+      "grams": {"type": "int"}
+    }
+  },
+  "goldSchemeUpgradeFailed": "Could not switch scheme. Please try again.",
 
   "mySavings": "My savings",
   "myTransactions": "My transactions",
@@ -306,6 +329,31 @@
   "logoutConfirmMessage": "Are you sure you want to logout?",
   "logOutConfirmTitle": "Log Out",
   "logOutConfirmMessage": "Are you sure you want to end your current session?",
+  "exitAppConfirmTitle": "Exit app?",
+  "exitAppConfirmMessage": "Are you sure you want to exit the app?",
+  "appUpdateAvailableTitle": "Update available",
+  "appUpdateAvailableMessage": "Version {newVersion} is available. You are on {currentVersion}.",
+  "@appUpdateAvailableMessage": {
+    "placeholders": {
+      "newVersion": {
+        "type": "String"
+      },
+      "currentVersion": {
+        "type": "String"
+      }
+    }
+  },
+  "appUpdateReleaseNotes": "What's new",
+  "appUpdateLater": "Later",
+  "appUpdateNow": "Update now",
+  "appUpdateDownloading": "Downloading update…",
+  "appUpdateInstalling": "Installing update…",
+  "appUpdateFailed": "Update failed. Please try again.",
+  "appUpdateUpToDate": "You're on the latest version.",
+  "appUpdateNotConfigured": "In-app updates are not configured on the server yet.",
+  "appUpdatePermissionError": "Allow install permission to update the app.",
+  "checkForUpdates": "Check for updates",
+  "appVersionLabel": "App version",
   "changePassword": "Change password",
   "notificationPreferences": "Notification preferences",
 

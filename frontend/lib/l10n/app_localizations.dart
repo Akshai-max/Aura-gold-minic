@@ -554,6 +554,54 @@ abstract class AppLocalizations {
   /// **'Select a 1 g, 5 g, or 10 g plan on your dashboard before purchasing gold.'**
   String get goldSchemeBuyBlockedBody;
 
+  /// No description provided for @goldSchemeCompletionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{grams} g scheme completed!'**
+  String goldSchemeCompletionTitle(String grams);
+
+  /// No description provided for @goldSchemeCompletionBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Would you like to sell your gold or start a higher savings plan?'**
+  String get goldSchemeCompletionBody;
+
+  /// No description provided for @goldSchemeCompletionBodyMaxTier.
+  ///
+  /// In en, this message translates to:
+  /// **'You completed the highest plan. Sell your gold or keep holding.'**
+  String get goldSchemeCompletionBodyMaxTier;
+
+  /// No description provided for @goldSchemeCompletionSell.
+  ///
+  /// In en, this message translates to:
+  /// **'Sell gold'**
+  String get goldSchemeCompletionSell;
+
+  /// No description provided for @goldSchemeCompletionUpgrade.
+  ///
+  /// In en, this message translates to:
+  /// **'Start {grams} g plan'**
+  String goldSchemeCompletionUpgrade(int grams);
+
+  /// No description provided for @goldSchemeCompletionStay.
+  ///
+  /// In en, this message translates to:
+  /// **'Stay on dashboard'**
+  String get goldSchemeCompletionStay;
+
+  /// No description provided for @goldSchemeUpgraded.
+  ///
+  /// In en, this message translates to:
+  /// **'{grams} g gold scheme activated.'**
+  String goldSchemeUpgraded(int grams);
+
+  /// No description provided for @goldSchemeUpgradeFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not switch scheme. Please try again.'**
+  String get goldSchemeUpgradeFailed;
+
   /// No description provided for @mySavings.
   ///
   /// In en, this message translates to:
@@ -1297,6 +1345,96 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Are you sure you want to end your current session?'**
   String get logOutConfirmMessage;
+
+  /// No description provided for @exitAppConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Exit app?'**
+  String get exitAppConfirmTitle;
+
+  /// No description provided for @exitAppConfirmMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to exit the app?'**
+  String get exitAppConfirmMessage;
+
+  /// No description provided for @appUpdateAvailableTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Update available'**
+  String get appUpdateAvailableTitle;
+
+  /// No description provided for @appUpdateAvailableMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Version {newVersion} is available. You are on {currentVersion}.'**
+  String appUpdateAvailableMessage(String newVersion, String currentVersion);
+
+  /// No description provided for @appUpdateReleaseNotes.
+  ///
+  /// In en, this message translates to:
+  /// **'What\'s new'**
+  String get appUpdateReleaseNotes;
+
+  /// No description provided for @appUpdateLater.
+  ///
+  /// In en, this message translates to:
+  /// **'Later'**
+  String get appUpdateLater;
+
+  /// No description provided for @appUpdateNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Update now'**
+  String get appUpdateNow;
+
+  /// No description provided for @appUpdateDownloading.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading update…'**
+  String get appUpdateDownloading;
+
+  /// No description provided for @appUpdateInstalling.
+  ///
+  /// In en, this message translates to:
+  /// **'Installing update…'**
+  String get appUpdateInstalling;
+
+  /// No description provided for @appUpdateFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Update failed. Please try again.'**
+  String get appUpdateFailed;
+
+  /// No description provided for @appUpdateUpToDate.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re on the latest version.'**
+  String get appUpdateUpToDate;
+
+  /// No description provided for @appUpdateNotConfigured.
+  ///
+  /// In en, this message translates to:
+  /// **'In-app updates are not configured on the server yet.'**
+  String get appUpdateNotConfigured;
+
+  /// No description provided for @appUpdatePermissionError.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow install permission to update the app.'**
+  String get appUpdatePermissionError;
+
+  /// No description provided for @checkForUpdates.
+  ///
+  /// In en, this message translates to:
+  /// **'Check for updates'**
+  String get checkForUpdates;
+
+  /// No description provided for @appVersionLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'App version'**
+  String get appVersionLabel;
 
   /// No description provided for @changePassword.
   ///

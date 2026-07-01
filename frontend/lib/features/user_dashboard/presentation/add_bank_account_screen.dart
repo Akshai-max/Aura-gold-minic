@@ -166,9 +166,7 @@ class _AddBankAccountScreenState extends ConsumerState<AddBankAccountScreen> {
                 district: _district!,
               )));
 
-    return Theme(
-      data: AurumConsumerTheme.theme(),
-      child: ResponsiveNavigationWrapper(
+    return ResponsiveNavigationWrapper(
         title: l10n.bankAccounts,
         child: ListView(
           padding: EdgeInsets.fromLTRB(16, 16, 16, 24 + bottomInset),
@@ -528,7 +526,6 @@ class _AddBankAccountScreenState extends ConsumerState<AddBankAccountScreen> {
               ),
           ],
         ),
-      ),
     );
   }
 

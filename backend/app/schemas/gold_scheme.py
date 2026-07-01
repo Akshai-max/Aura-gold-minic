@@ -22,3 +22,10 @@ class SelectGoldSchemeRequest(BaseModel):
         ...,
         description="Gold savings scheme target: 1, 5, or 10 grams",
     )
+
+
+class UpgradeGoldSchemeRequest(BaseModel):
+    target_grams: GoldSchemeTier = Field(
+        ...,
+        description="Higher gold savings scheme target after completing the current plan",
+    )

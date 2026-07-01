@@ -17,14 +17,11 @@ class SellGoldScreen extends StatelessWidget {
     final isSilver = metal == MetalType.silver;
     final title = isSilver ? l10n.sellSilver : l10n.sellGold;
 
-    return Theme(
-      data: AurumConsumerTheme.theme(),
-      child: ResponsiveNavigationWrapper(
-        title: title,
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: TradeAmountForm(isBuy: false, metal: metal),
-        ),
+    return ResponsiveNavigationWrapper(
+      title: title,
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: TradeAmountForm(isBuy: false, metal: metal),
       ),
     );
   }

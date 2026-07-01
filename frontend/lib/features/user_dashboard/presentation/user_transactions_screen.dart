@@ -10,33 +10,30 @@ class UserTransactionsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
 
-    return Theme(
-      data: AurumConsumerTheme.theme(),
-      child: ResponsiveNavigationWrapper(
-        title: l10n.myTransactions,
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(32),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(
-                  Icons.receipt_long_outlined,
-                  size: 56,
-                  color: AurumConsumerTheme.textMuted,
+    return ResponsiveNavigationWrapper(
+      title: l10n.myTransactions,
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.receipt_long_outlined,
+                size: 56,
+                color: AurumConsumerTheme.muted(context),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                l10n.noTransactionsYet,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: AurumConsumerTheme.muted(context),
+                  fontSize: 15,
+                  height: 1.45,
                 ),
-                const SizedBox(height: 16),
-                Text(
-                  l10n.noTransactionsYet,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    color: AurumConsumerTheme.textMuted,
-                    fontSize: 15,
-                    height: 1.45,
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),

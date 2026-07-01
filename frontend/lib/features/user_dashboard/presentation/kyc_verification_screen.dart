@@ -384,9 +384,7 @@ class _KycVerificationScreenState extends ConsumerState<KycVerificationScreen> {
       next.whenData(_syncStageFromStatus);
     });
 
-    return Theme(
-      data: AurumConsumerTheme.theme(),
-      child: ResponsiveNavigationWrapper(
+    return ResponsiveNavigationWrapper(
         title: l10n.kycVerification,
         child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
@@ -525,7 +523,6 @@ class _KycVerificationScreenState extends ConsumerState<KycVerificationScreen> {
           ),
         ),
       ),
-    ),
     );
   }
 

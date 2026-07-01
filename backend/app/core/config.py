@@ -121,6 +121,13 @@ class Settings(BaseSettings):
     SIGNUP_OTP_SEND_COOLDOWN_HOURS: int = 1
     SIGNUP_OTP_USE_MSG91_VERIFY: bool = True
 
+    # Android in-app update (public APK URL + version; bump when publishing a new APK)
+    APP_ANDROID_VERSION_NAME: str = ""
+    APP_ANDROID_VERSION_CODE: int = 0
+    APP_ANDROID_APK_URL: str = ""
+    APP_ANDROID_RELEASE_NOTES: str = ""
+    APP_ANDROID_FORCE_UPDATE: bool = False
+
     # Razorpay — set in .env, never commit secrets
     RAZORPAY_KEY_ID: str = ""
     RAZORPAY_KEY_SECRET: str = ""

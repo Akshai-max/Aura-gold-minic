@@ -1,0 +1,61 @@
+name: Publish Android APK Release
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'frontend/**'
+      - '.github/workflows/release-apk.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  publish-apk:
+    name: Build and publish APK to GitHub Releases
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: zulu
+          java-version: '17'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Read app version
+        id: version
+        working-directory: frontend
+        run: |
+          VERSION=$(grep '^version:' pubspec.yaml | awk '{print $2}')
+          NAME=${VERSION%%+*}
+          CODE=${VERSION#*+}
+          echo "name=$NAME" >> "$GITHUB_OUTPUT"
+          echo "code=$CODE" >> "$GITHUB_OUTPUT"
+
+      - name: Install Dependencies
+        run: |
+          cd frontend
+          flutter pub get
+
+      - name: Build APK (Release)
+        run: |
+          cd frontend
+          flutter build apk --release --dart-define=ENV=prod
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.version.outputs.name }}
+          name: AGS Gold v${{ steps.version.outputs.name }} (build ${{ steps.version.outputs.code }})
+          files: frontend/build/app/outputs/flutter-apk/app-release.apk
+          make_latest: true
+          generate_release_notes: true

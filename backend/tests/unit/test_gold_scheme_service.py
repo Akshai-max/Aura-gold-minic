@@ -46,6 +46,48 @@ async def test_select_scheme_rejects_duplicate():
         await service.select_scheme(user, target_grams=Decimal("5"))
 
 
+@pytest.mark.asyncio
+async def test_upgrade_scheme_from_completed_1g_to_5g():
+    user = _user(
+        gold_scheme_status="completed",
+        gold_scheme_target_grams=Decimal("1"),
+        gold_savings_grams=Decimal("1"),
+    )
+    repo = MagicMock()
+    repo.db = AsyncMock()
+    service = GoldSchemeService(repo)
+
+    result = await service.upgrade_scheme(user, target_grams=Decimal("5"))
+
+    assert user.gold_scheme_status == "active"
+    assert user.gold_scheme_target_grams == Decimal("5")
+    assert result.status == "active"
+
+
+@pytest.mark.asyncio
+async def test_upgrade_scheme_rejects_non_completed():
+    user = _user(gold_scheme_status="active", gold_scheme_target_grams=Decimal("1"))
+    repo = MagicMock()
+    service = GoldSchemeService(repo)
+
+    with pytest.raises(ValidationException):
+        await service.upgrade_scheme(user, target_grams=Decimal("5"))
+
+
+@pytest.mark.asyncio
+async def test_upgrade_scheme_rejects_lower_tier():
+    user = _user(
+        gold_scheme_status="completed",
+        gold_scheme_target_grams=Decimal("5"),
+        gold_savings_grams=Decimal("5"),
+    )
+    repo = MagicMock()
+    service = GoldSchemeService(repo)
+
+    with pytest.raises(ValidationException):
+        await service.upgrade_scheme(user, target_grams=Decimal("1"))
+
+
 def test_sync_completes_scheme_when_target_reached():
     user = _user(
         gold_scheme_status="active",

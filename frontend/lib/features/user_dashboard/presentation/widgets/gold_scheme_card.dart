@@ -4,9 +4,11 @@ import 'package:go_router/go_router.dart';
 import 'package:ags_gold/core/theme/app_theme.dart';
 import 'package:ags_gold/core/theme/aurum_consumer_theme.dart';
 import 'package:ags_gold/features/user_dashboard/domain/gold_scheme.dart';
+import 'package:ags_gold/features/user_dashboard/domain/gold_scheme_utils.dart';
 import 'package:ags_gold/features/user_dashboard/domain/kyc_status.dart';
 import 'package:ags_gold/features/user_dashboard/presentation/providers/gold_scheme_provider.dart';
 import 'package:ags_gold/features/user_dashboard/presentation/widgets/aurum_surface_card.dart';
+import 'package:ags_gold/features/user_dashboard/presentation/widgets/scheme_completion_dialog.dart';
 import 'package:ags_gold/core/logging/app_event_log.dart';
 import 'package:ags_gold/l10n/l10n_extension.dart';
 
@@ -38,6 +40,8 @@ class _GoldSchemeCardState extends ConsumerState<GoldSchemeCard> {
     final kycReady = widget.kycStatus.isComplete;
 
     if (scheme.status.isCompleted) {
+      final upgradeOptions = goldSchemeUpgradeOptions(scheme);
+
       return AurumSurfaceCard(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -79,6 +83,36 @@ class _GoldSchemeCardState extends ConsumerState<GoldSchemeCard> {
                 ),
               ],
             ),
+            const SizedBox(height: 16),
+            Text(
+              upgradeOptions.isEmpty
+                  ? l10n.goldSchemeCompletionBodyMaxTier
+                  : l10n.goldSchemeCompletionBody,
+              style: const TextStyle(
+                color: AurumConsumerTheme.textMuted,
+                fontSize: 12,
+                height: 1.4,
+              ),
+            ),
+            const SizedBox(height: 14),
+            FilledButton.icon(
+              onPressed: kycReady ? () => openSellGoldInquiry(context) : null,
+              icon: const Icon(Icons.sell_outlined, size: 18),
+              label: Text(l10n.goldSchemeCompletionSell),
+            ),
+            for (final grams in upgradeOptions) ...[
+              const SizedBox(height: 8),
+              OutlinedButton(
+                onPressed: kycReady
+                    ? () => handleSchemeUpgrade(
+                          context: context,
+                          ref: ref,
+                          targetGrams: grams,
+                        )
+                    : null,
+                child: Text(l10n.goldSchemeCompletionUpgrade(grams)),
+              ),
+            ],
           ],
         ),
       );

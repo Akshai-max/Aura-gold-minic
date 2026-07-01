@@ -5,6 +5,8 @@ import 'package:ags_gold/core/logging/api_debug_log.dart';
 import 'package:ags_gold/l10n/app_localizations.dart';
 import 'package:ags_gold/config/env_config.dart';
 import 'package:ags_gold/core/theme/app_theme.dart';
+import 'package:ags_gold/core/widgets/app_exit_guard.dart';
+import 'package:ags_gold/features/app_update/presentation/app_update_listener.dart';
 import 'package:ags_gold/routes/app_routes.dart';
 import 'package:ags_gold/services/service_providers.dart';
 import 'package:ags_gold/features/settings/presentation/providers/settings_provider.dart';
@@ -44,6 +46,11 @@ class AGSGoldApp extends ConsumerWidget {
     final locale = ref.watch(appLocaleProvider);
 
     return MaterialApp.router(
+      builder: (context, child) => AppExitGuard(
+        child: AppUpdateListener(
+          child: child ?? const SizedBox.shrink(),
+        ),
+      ),
       title: 'AGS Gold',
       debugShowCheckedModeBanner: false,
       themeMode: themeMode,

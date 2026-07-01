@@ -24,33 +24,30 @@ class ReferAndEarnScreen extends ConsumerWidget {
     final l10n = context.l10n;
     final summaryAsync = ref.watch(referralSummaryProvider);
 
-    return Theme(
-      data: AurumConsumerTheme.theme(),
-      child: ResponsiveNavigationWrapper(
-        title: l10n.referAndEarn,
-        child: RefreshIndicator(
-          color: AurumConsumerTheme.chipGold,
-          onRefresh: () async {
-            ref.invalidate(referralSummaryProvider);
-            await ref.read(referralSummaryProvider.future);
-          },
-          child: summaryAsync.when(
-            data: (summary) => _ReferBody(summary: summary),
-            loading: () => const Center(child: CircularProgressIndicator()),
-            error: (error, _) => ListView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              children: [
-                const SizedBox(height: 120),
-                Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Text(
-                    l10n.referralLoadFailed('$error'),
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(color: Colors.redAccent),
-                  ),
+    return ResponsiveNavigationWrapper(
+      title: l10n.referAndEarn,
+      child: RefreshIndicator(
+        color: AurumConsumerTheme.chipGold,
+        onRefresh: () async {
+          ref.invalidate(referralSummaryProvider);
+          await ref.read(referralSummaryProvider.future);
+        },
+        child: summaryAsync.when(
+          data: (summary) => _ReferBody(summary: summary),
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (error, _) => ListView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            children: [
+              const SizedBox(height: 120),
+              Padding(
+                padding: const EdgeInsets.all(24),
+                child: Text(
+                  l10n.referralLoadFailed('$error'),
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: Colors.redAccent),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),

@@ -5,11 +5,14 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:ags_gold/core/theme/aurum_consumer_theme.dart';
 import 'package:ags_gold/features/user_dashboard/domain/metal_prices.dart';
+import 'package:ags_gold/features/user_dashboard/domain/gold_scheme.dart';
+import 'package:ags_gold/features/user_dashboard/domain/gold_scheme_utils.dart';
 import 'package:ags_gold/features/user_dashboard/presentation/providers/personal_dashboard_provider.dart';
 import 'package:ags_gold/features/user_dashboard/presentation/providers/gold_payment_provider.dart';
 import 'package:ags_gold/features/user_dashboard/presentation/providers/metal_prices_provider.dart';
 import 'package:ags_gold/features/user_dashboard/presentation/services/razorpay_checkout.dart';
 import 'package:ags_gold/features/user_dashboard/presentation/widgets/aurum_surface_card.dart';
+import 'package:ags_gold/features/user_dashboard/presentation/widgets/scheme_completion_dialog.dart';
 import 'package:ags_gold/l10n/l10n_extension.dart';
 import 'package:ags_gold/services/api_client.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
@@ -34,6 +37,7 @@ class _TradeAmountFormState extends ConsumerState<TradeAmountForm> {
   final _checkout = RazorpayCheckout();
   bool _syncing = false;
   bool _paying = false;
+  GoldSchemeStatus? _schemeWasActiveBeforePayment;
 
   @override
   void dispose() {
@@ -82,6 +86,11 @@ class _TradeAmountFormState extends ConsumerState<TradeAmountForm> {
 
     setState(() => _paying = true);
     try {
+      if (widget.isBuy && widget.metal == MetalType.gold) {
+        _schemeWasActiveBeforePayment =
+            ref.read(personalDashboardProvider).value?.goldScheme.status;
+      }
+
       final order = await ref.read(goldPaymentProvider)(
         metal: widget.metal == MetalType.silver ? 'silver' : 'gold',
         grams: grams != null && grams > 0 ? grams : null,
@@ -134,7 +143,7 @@ class _TradeAmountFormState extends ConsumerState<TradeAmountForm> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(result.message)),
       );
-      context.go('/user-dashboard');
+      await _handlePostPaymentNavigation();
     } on ApiException catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -172,7 +181,7 @@ class _TradeAmountFormState extends ConsumerState<TradeAmountForm> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(result.message)),
       );
-      context.go('/user-dashboard');
+      await _handlePostPaymentNavigation();
     } on ApiException catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -189,6 +198,27 @@ class _TradeAmountFormState extends ConsumerState<TradeAmountForm> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message ?? context.l10n.paymentFailed)),
     );
+  }
+
+  Future<void> _handlePostPaymentNavigation() async {
+    if (!mounted) return;
+
+    final dashboard = ref.read(personalDashboardProvider).value;
+    final scheme = dashboard?.goldScheme;
+    final justCompleted = widget.isBuy &&
+        widget.metal == MetalType.gold &&
+        _schemeWasActiveBeforePayment == GoldSchemeStatus.active &&
+        scheme?.status.isCompleted == true;
+
+    if (justCompleted && scheme != null) {
+      final choice = await showSchemeCompletionDialog(context, ref, scheme);
+      await navigateAfterSchemeCompletion(context, ref, choice);
+      return;
+    }
+
+    if (mounted) {
+      context.go('/user-dashboard');
+    }
   }
 
   @override

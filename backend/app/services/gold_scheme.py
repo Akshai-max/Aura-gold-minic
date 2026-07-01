@@ -49,6 +49,43 @@ class GoldSchemeService:
             await self.referral_service.maybe_credit_referrer(user, target_grams)
         return self.build_response(user)
 
+    async def upgrade_scheme(
+        self, user: User, *, target_grams: Decimal
+    ) -> GoldSchemeResponse:
+        if user.kyc_status != "verified":
+            raise ValidationException("Complete KYC verification before upgrading.")
+        if user.gold_scheme_status != "completed":
+            raise ValidationException(
+                "Finish your current gold savings scheme before choosing a new plan."
+            )
+        if target_grams not in SCHEME_TIERS:
+            raise ValidationException("Choose a valid scheme: 1 g, 5 g, or 10 g.")
+
+        current = Decimal(str(user.gold_scheme_target_grams or 0))
+        if target_grams <= current:
+            raise ValidationException(
+                f"Choose a higher scheme than your completed {current} g plan."
+            )
+
+        holdings = Decimal(str(user.gold_savings_grams or 0))
+        if holdings > target_grams:
+            raise ValidationException(
+                f"Your current gold balance ({holdings} g) exceeds the {target_grams} g "
+                f"scheme. Choose a higher scheme."
+            )
+
+        user.gold_scheme_target_grams = target_grams
+        user.gold_scheme_started_at = datetime.now(timezone.utc)
+        if holdings >= target_grams:
+            user.gold_scheme_status = "completed"
+        else:
+            user.gold_scheme_status = "active"
+
+        await self.user_repo.db.commit()
+        await self.user_repo.db.refresh(user)
+        clear_personal_dashboard_cache(str(user.id))
+        return self.build_response(user)
+
     @staticmethod
     def sync_after_gold_purchase(user: User) -> None:
         if user.gold_scheme_status != "active":

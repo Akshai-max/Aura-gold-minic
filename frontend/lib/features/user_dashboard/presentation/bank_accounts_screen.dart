@@ -16,9 +16,7 @@ class BankAccountsScreen extends ConsumerWidget {
     final l10n = context.l10n;
     final accountsAsync = ref.watch(bankAccountsProvider);
 
-    return Theme(
-      data: AurumConsumerTheme.theme(),
-      child: ResponsiveNavigationWrapper(
+    return ResponsiveNavigationWrapper(
         title: l10n.bankAccounts,
         child: RefreshIndicator(
           onRefresh: () async => ref.invalidate(bankAccountsProvider),
@@ -91,7 +89,6 @@ class BankAccountsScreen extends ConsumerWidget {
             ],
           ),
         ),
-      ),
     );
   }
 }

@@ -269,6 +269,39 @@ class AppLocalizationsTa extends AppLocalizations {
       'தங்கம் வாங்குவதற்கு முன் டாஷ்போர்டில் 1 g, 5 g அல்லது 10 g திட்டத்தைத் தேர்ந்தெடுக்கவும்.';
 
   @override
+  String goldSchemeCompletionTitle(String grams) {
+    return '$grams g திட்டம் முடிந்தது!';
+  }
+
+  @override
+  String get goldSchemeCompletionBody =>
+      'தங்கம் விற்க வேண்டுமா அல்லது அடுத்த சேமிப்பு திட்டத்தைத் தொடங்க வேண்டுமா?';
+
+  @override
+  String get goldSchemeCompletionBodyMaxTier =>
+      'உயர்ந்த திட்டம் முடிந்தது. விற்கலாம் அல்லது வைத்திருக்கலாம்.';
+
+  @override
+  String get goldSchemeCompletionSell => 'தங்கம் விற்க';
+
+  @override
+  String goldSchemeCompletionUpgrade(int grams) {
+    return '$grams g திட்டம் தொடங்கு';
+  }
+
+  @override
+  String get goldSchemeCompletionStay => 'டாஷ்போர்டில் இரு';
+
+  @override
+  String goldSchemeUpgraded(int grams) {
+    return '$grams g தங்கத் திட்டம் தொடங்கியது.';
+  }
+
+  @override
+  String get goldSchemeUpgradeFailed =>
+      'திட்டத்தை மாற்ற முடியவில்லை. மீண்டும் முயற்சிக்கவும்.';
+
+  @override
   String get mySavings => 'என் சேமிப்பு';
 
   @override
@@ -683,6 +716,58 @@ class AppLocalizationsTa extends AppLocalizations {
   @override
   String get logOutConfirmMessage =>
       'உங்கள் தற்போதைய அமர்வை முடிக்க விரும்புகிறீர்களா?';
+
+  @override
+  String get exitAppConfirmTitle => 'ஆப்பிலிருந்து வெளியேறவா?';
+
+  @override
+  String get exitAppConfirmMessage =>
+      'ஆப்பிலிருந்து வெளியேற விரும்புகிறீர்களா?';
+
+  @override
+  String get appUpdateAvailableTitle => 'புதிய புதுப்பிப்பு உள்ளது';
+
+  @override
+  String appUpdateAvailableMessage(String newVersion, String currentVersion) {
+    return 'பதிப்பு $newVersion கிடைக்கிறது. நீங்கள் $currentVersion பயன்படுத்துகிறீர்கள்.';
+  }
+
+  @override
+  String get appUpdateReleaseNotes => 'புதிய மாற்றங்கள்';
+
+  @override
+  String get appUpdateLater => 'பிறகு';
+
+  @override
+  String get appUpdateNow => 'இப்போது புதுப்பிக்கவும்';
+
+  @override
+  String get appUpdateDownloading => 'பதிவிறக்கம் நடக்கிறது…';
+
+  @override
+  String get appUpdateInstalling => 'நிறுவப்படுகிறது…';
+
+  @override
+  String get appUpdateFailed =>
+      'புதுப்பிப்பு தோல்வியடைந்தது. மீண்டும் முயற்சிக்கவும்.';
+
+  @override
+  String get appUpdateUpToDate =>
+      'நீங்கள் சமீபத்திய பதிப்பைப் பயன்படுத்துகிறீர்கள்.';
+
+  @override
+  String get appUpdateNotConfigured =>
+      'சேவையகத்தில் இன்-ஆப் புதுப்பிப்பு இன்னும் அமைக்கப்படவில்லை.';
+
+  @override
+  String get appUpdatePermissionError =>
+      'புதுப்பிக்க நிறுவல் அனுமதியை வழங்கவும்.';
+
+  @override
+  String get checkForUpdates => 'புதுப்பிப்புகளைச் சரிபார்க்கவும்';
+
+  @override
+  String get appVersionLabel => 'ஆப் பதிப்பு';
 
   @override
   String get changePassword => 'கடவுச்சொல்லை மாற்று';

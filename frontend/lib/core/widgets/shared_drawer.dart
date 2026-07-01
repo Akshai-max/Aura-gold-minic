@@ -11,7 +11,6 @@ import 'package:ags_gold/core/navigation/app_nav_destinations.dart';
 import 'package:ags_gold/features/notifications/presentation/notification_drawer.dart';
 import 'package:ags_gold/features/user_dashboard/presentation/widgets/live_price_app_bar_chip.dart';
 import 'package:ags_gold/l10n/l10n_extension.dart';
-
 class ResponsiveNavigationWrapper extends ConsumerWidget {
   final Widget child;
   final String title;
@@ -51,6 +50,8 @@ class ResponsiveNavigationWrapper extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = GoRouterState.of(context);
     final currentPath = state.matchedLocation;
+    final themeMode = ref.watch(themeModeProvider);
+    final platformBrightness = MediaQuery.platformBrightnessOf(context);
     final theme = Theme.of(context);
     final isDesktop = ResponsiveLayout.isDesktop(context);
     final profile = ref.watch(profileProvider).value;
@@ -142,11 +143,16 @@ class ResponsiveNavigationWrapper extends ConsumerWidget {
         ? selectedNavIndexForPath(currentPath, endUserDestinations)
         : 0;
 
+    final consumerTheme = isEndUserMobile
+        ? AurumConsumerTheme.resolve(themeMode, platformBrightness)
+        : theme;
+
     return Theme(
-      data: isEndUserMobile ? AurumConsumerTheme.theme() : theme,
+      data: consumerTheme,
       child: Scaffold(
-      backgroundColor:
-          isEndUserMobile ? AurumConsumerTheme.background : null,
+      backgroundColor: isEndUserMobile
+          ? consumerTheme.scaffoldBackgroundColor
+          : null,
       endDrawer: const NotificationDrawer(),
       appBar: AppBar(
         automaticallyImplyLeading: !isEndUserMobile,
@@ -260,7 +266,7 @@ class ResponsiveNavigationWrapper extends ConsumerWidget {
             )
           : null,
       body: child,
-    ),
+      ),
     );
   }
 }
@@ -279,8 +285,8 @@ class _EndUserBottomNav extends StatelessWidget {
     final l10n = context.l10n;
 
     return Container(
-      decoration: const BoxDecoration(
-        border: Border(top: BorderSide(color: AurumConsumerTheme.border)),
+      decoration: BoxDecoration(
+        border: Border(top: BorderSide(color: AurumConsumerTheme.borderOf(context))),
       ),
       child: SafeArea(
         child: Padding(
@@ -347,7 +353,7 @@ class _NavItem extends StatelessWidget {
                   : null,
               child: Icon(
                 selected ? selectedIcon : icon,
-                color: selected ? activeBlue : AurumConsumerTheme.textMuted,
+                color: selected ? activeBlue : AurumConsumerTheme.muted(context),
                 size: 22,
               ),
             ),
@@ -355,7 +361,7 @@ class _NavItem extends StatelessWidget {
             Text(
               label,
               style: TextStyle(
-                color: selected ? activeBlue : AurumConsumerTheme.textMuted,
+                color: selected ? activeBlue : AurumConsumerTheme.muted(context),
                 fontSize: 12,
                 fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
               ),

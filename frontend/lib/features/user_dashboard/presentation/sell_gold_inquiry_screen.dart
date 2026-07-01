@@ -81,9 +81,7 @@ class _SellGoldInquiryScreenState extends ConsumerState<SellGoldInquiryScreen> {
     final l10n = context.l10n;
     _prefillFromDashboard();
 
-    return Theme(
-      data: AurumConsumerTheme.theme(),
-      child: ResponsiveNavigationWrapper(
+    return ResponsiveNavigationWrapper(
         title: l10n.sellGoldInquiryTitle,
         child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
@@ -198,7 +196,6 @@ class _SellGoldInquiryScreenState extends ConsumerState<SellGoldInquiryScreen> {
             ),
           ),
         ),
-      ),
     );
   }
 }

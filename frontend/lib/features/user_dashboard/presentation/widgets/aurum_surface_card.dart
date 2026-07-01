@@ -18,7 +18,7 @@ class AurumSurfaceCard extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: padding,
-      decoration: AurumConsumerTheme.cardDecoration(color: color),
+      decoration: AurumConsumerTheme.cardDecorationOf(context, color: color),
       child: child,
     );
   }

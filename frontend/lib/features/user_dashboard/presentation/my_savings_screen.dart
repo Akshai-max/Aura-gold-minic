@@ -24,9 +24,7 @@ class MySavingsScreen extends ConsumerWidget {
       decimalDigits: 2,
     );
 
-    return Theme(
-      data: AurumConsumerTheme.theme(),
-      child: ResponsiveNavigationWrapper(
+    return ResponsiveNavigationWrapper(
         title: l10n.mySavings,
         child: dashboardAsync.when(
           data: (data) {
@@ -96,7 +94,6 @@ class MySavingsScreen extends ConsumerWidget {
             child: Text(l10n.failedToLoadDashboard('$e')),
           ),
         ),
-      ),
     );
   }
 }

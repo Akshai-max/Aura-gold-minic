@@ -4,7 +4,11 @@ from fastapi import APIRouter, Depends, status
 
 from app.api.dependencies import get_current_user, get_gold_scheme_service
 from app.models.user import User
-from app.schemas.gold_scheme import GoldSchemeResponse, SelectGoldSchemeRequest
+from app.schemas.gold_scheme import (
+    GoldSchemeResponse,
+    SelectGoldSchemeRequest,
+    UpgradeGoldSchemeRequest,
+)
 from app.services.gold_scheme import GoldSchemeService
 
 router = APIRouter()
@@ -35,6 +39,23 @@ async def select_gold_scheme(
     scheme_service: GoldSchemeService = Depends(get_gold_scheme_service),
 ) -> GoldSchemeResponse:
     return await scheme_service.select_scheme(
+        current_user,
+        target_grams=Decimal(str(body.target_grams)),
+    )
+
+
+@router.post(
+    "/upgrade",
+    response_model=GoldSchemeResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Upgrade to a higher gold scheme after completing the current plan",
+)
+async def upgrade_gold_scheme(
+    body: UpgradeGoldSchemeRequest,
+    current_user: User = Depends(get_current_user),
+    scheme_service: GoldSchemeService = Depends(get_gold_scheme_service),
+) -> GoldSchemeResponse:
+    return await scheme_service.upgrade_scheme(
         current_user,
         target_grams=Decimal(str(body.target_grams)),
     )

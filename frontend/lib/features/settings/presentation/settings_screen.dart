@@ -4,10 +4,14 @@ import 'package:ags_gold/core/widgets/shared_drawer.dart';
 import 'package:ags_gold/core/widgets/premium_skeleton.dart';
 import 'package:ags_gold/features/settings/presentation/providers/settings_provider.dart';
 import 'package:ags_gold/features/profile/presentation/profile_dialogs.dart';
-import 'package:ags_gold/services/service_providers.dart';
 import 'package:ags_gold/l10n/app_languages.dart';
 import 'package:ags_gold/l10n/l10n_extension.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ags_gold/core/widgets/theme_mode_picker.dart';
+import 'package:ags_gold/features/app_update/services/app_update_coordinator.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -16,7 +20,6 @@ class SettingsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final settingsAsync = ref.watch(userSettingsProvider);
-    final themeMode = ref.watch(themeModeProvider);
     final theme = Theme.of(context);
 
     return ResponsiveNavigationWrapper(
@@ -31,29 +34,7 @@ class SettingsScreen extends ConsumerWidget {
                 theme,
                 l10n.themeSettings,
                 Icons.palette_outlined,
-                SegmentedButton<ThemeMode>(
-                  segments: [
-                    ButtonSegment(
-                      value: ThemeMode.system,
-                      label: Text(l10n.themeSystem),
-                      icon: const Icon(Icons.brightness_auto),
-                    ),
-                    ButtonSegment(
-                      value: ThemeMode.light,
-                      label: Text(l10n.themeLight),
-                      icon: const Icon(Icons.light_mode),
-                    ),
-                    ButtonSegment(
-                      value: ThemeMode.dark,
-                      label: Text(l10n.themeDark),
-                      icon: const Icon(Icons.dark_mode),
-                    ),
-                  ],
-                  selected: {themeMode},
-                  onSelectionChanged: (s) {
-                    ref.read(themeModeProvider.notifier).setThemeMode(s.first);
-                  },
-                ),
+                const ThemeModePicker(),
               ),
               const SizedBox(height: 16),
               _sectionCard(
@@ -136,6 +117,14 @@ class SettingsScreen extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: 16),
+              if (!kIsWeb && Platform.isAndroid)
+                _sectionCard(
+                  theme,
+                  l10n.appVersionLabel,
+                  Icons.system_update_alt_outlined,
+                  const _AppUpdateSection(),
+                ),
+              if (!kIsWeb && Platform.isAndroid) const SizedBox(height: 16),
               _sectionCard(
                 theme,
                 l10n.accountSettings,
@@ -202,5 +191,50 @@ class SettingsScreen extends ConsumerWidget {
 
   Future<void> _saveSettings(WidgetRef ref, settings) async {
     await ref.read(updateUserSettingsProvider)(settings);
+  }
+}
+
+class _AppUpdateSection extends ConsumerStatefulWidget {
+  const _AppUpdateSection();
+
+  @override
+  ConsumerState<_AppUpdateSection> createState() => _AppUpdateSectionState();
+}
+
+class _AppUpdateSectionState extends ConsumerState<_AppUpdateSection> {
+  late final Future<PackageInfo> _packageInfo = PackageInfo.fromPlatform();
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+
+    return FutureBuilder<PackageInfo>(
+      future: _packageInfo,
+      builder: (context, snapshot) {
+        final versionLabel = snapshot.hasData
+            ? '${snapshot.data!.version} (${snapshot.data!.buildNumber})'
+            : '…';
+
+        return Column(
+          children: [
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              title: Text(l10n.appVersionLabel),
+              subtitle: Text(versionLabel),
+            ),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: FilledButton.icon(
+                onPressed: () => ref
+                    .read(appUpdateCoordinatorProvider)
+                    .checkAndPrompt(context, manual: true),
+                icon: const Icon(Icons.download_rounded),
+                label: Text(l10n.checkForUpdates),
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
 }

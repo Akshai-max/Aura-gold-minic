@@ -267,6 +267,39 @@ class AppLocalizationsEn extends AppLocalizations {
       'Select a 1 g, 5 g, or 10 g plan on your dashboard before purchasing gold.';
 
   @override
+  String goldSchemeCompletionTitle(String grams) {
+    return '$grams g scheme completed!';
+  }
+
+  @override
+  String get goldSchemeCompletionBody =>
+      'Would you like to sell your gold or start a higher savings plan?';
+
+  @override
+  String get goldSchemeCompletionBodyMaxTier =>
+      'You completed the highest plan. Sell your gold or keep holding.';
+
+  @override
+  String get goldSchemeCompletionSell => 'Sell gold';
+
+  @override
+  String goldSchemeCompletionUpgrade(int grams) {
+    return 'Start $grams g plan';
+  }
+
+  @override
+  String get goldSchemeCompletionStay => 'Stay on dashboard';
+
+  @override
+  String goldSchemeUpgraded(int grams) {
+    return '$grams g gold scheme activated.';
+  }
+
+  @override
+  String get goldSchemeUpgradeFailed =>
+      'Could not switch scheme. Please try again.';
+
+  @override
   String get mySavings => 'My savings';
 
   @override
@@ -676,6 +709,55 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get logOutConfirmMessage =>
       'Are you sure you want to end your current session?';
+
+  @override
+  String get exitAppConfirmTitle => 'Exit app?';
+
+  @override
+  String get exitAppConfirmMessage => 'Are you sure you want to exit the app?';
+
+  @override
+  String get appUpdateAvailableTitle => 'Update available';
+
+  @override
+  String appUpdateAvailableMessage(String newVersion, String currentVersion) {
+    return 'Version $newVersion is available. You are on $currentVersion.';
+  }
+
+  @override
+  String get appUpdateReleaseNotes => 'What\'s new';
+
+  @override
+  String get appUpdateLater => 'Later';
+
+  @override
+  String get appUpdateNow => 'Update now';
+
+  @override
+  String get appUpdateDownloading => 'Downloading update…';
+
+  @override
+  String get appUpdateInstalling => 'Installing update…';
+
+  @override
+  String get appUpdateFailed => 'Update failed. Please try again.';
+
+  @override
+  String get appUpdateUpToDate => 'You\'re on the latest version.';
+
+  @override
+  String get appUpdateNotConfigured =>
+      'In-app updates are not configured on the server yet.';
+
+  @override
+  String get appUpdatePermissionError =>
+      'Allow install permission to update the app.';
+
+  @override
+  String get checkForUpdates => 'Check for updates';
+
+  @override
+  String get appVersionLabel => 'App version';
 
   @override
   String get changePassword => 'Change password';

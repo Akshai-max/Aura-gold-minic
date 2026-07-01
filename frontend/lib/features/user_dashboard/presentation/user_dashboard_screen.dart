@@ -22,9 +22,7 @@ class UserDashboardScreen extends ConsumerWidget {
     final l10n = context.l10n;
     final dashboardAsync = ref.watch(personalDashboardProvider);
 
-    return Theme(
-      data: AurumConsumerTheme.theme(),
-      child: ResponsiveNavigationWrapper(
+    return ResponsiveNavigationWrapper(
         title: l10n.navAurum,
         child: RefreshIndicator(
           color: AurumConsumerTheme.chipGold,
@@ -129,7 +127,6 @@ class UserDashboardScreen extends ConsumerWidget {
             ),
           ),
         ),
-      ),
     );
   }
 }

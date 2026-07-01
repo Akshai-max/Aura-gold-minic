@@ -147,7 +147,6 @@ final routerProvider = Provider<GoRouter>((ref) {
             '/reports',
             '/workflows',
             '/admin/',
-            '/settings',
           ];
           if (staffRoutes.any(location.startsWith)) {
             return '/user-dashboard';

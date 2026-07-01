@@ -181,7 +181,7 @@ class _ConsumerProfileBody extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     return ColoredBox(
-      color: AppTheme.profileBg,
+      color: Theme.of(context).scaffoldBackgroundColor,
       child: ListView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
         children: [
@@ -236,6 +236,11 @@ class _ConsumerProfileBody extends ConsumerWidget {
           ProfileSectionHeader(title: l10n.general),
           ProfileSettingsGroup(
             children: [
+              ProfileSettingsTile(
+                icon: Icons.palette_outlined,
+                title: l10n.themeSettings,
+                onTap: () => context.push('/settings'),
+              ),
               ProfileSettingsTile(
                 icon: Icons.language_outlined,
                 title: l10n.changeAppLanguage,

@@ -18,12 +18,25 @@ final pendingGoldSchemeGramsProvider =
 );
 
 typedef SelectGoldScheme = Future<GoldScheme> Function(int targetGrams);
+typedef UpgradeGoldScheme = Future<GoldScheme> Function(int targetGrams);
 
 final selectGoldSchemeProvider = Provider<SelectGoldScheme>((ref) {
   return (int targetGrams) async {
     final apiClient = ref.read(apiClientProvider);
     final response = await apiClient.post(
       '/gold-scheme/select',
+      data: {'target_grams': targetGrams},
+    );
+    await ref.read(personalDashboardProvider.notifier).refresh();
+    return GoldScheme.fromJson(response.data as Map<String, dynamic>);
+  };
+});
+
+final upgradeGoldSchemeProvider = Provider<UpgradeGoldScheme>((ref) {
+  return (int targetGrams) async {
+    final apiClient = ref.read(apiClientProvider);
+    final response = await apiClient.post(
+      '/gold-scheme/upgrade',
       data: {'target_grams': targetGrams},
     );
     await ref.read(personalDashboardProvider.notifier).refresh();

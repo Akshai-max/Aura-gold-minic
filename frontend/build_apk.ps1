@@ -21,6 +21,14 @@ if ($ApiBaseUrl) {
 
 flutter @buildArgs
 
+$pubspec = Get-Content (Join-Path $PSScriptRoot "pubspec.yaml") | Where-Object { $_ -match '^version:\s*' } | Select-Object -First 1
+if ($pubspec) {
+    Write-Host ""
+    Write-Host "Release version: $($pubspec.Trim())" -ForegroundColor Yellow
+    Write-Host "After uploading the APK, run:" -ForegroundColor Yellow
+    Write-Host "  .\scripts\print_app_release_env.ps1" -ForegroundColor DarkGray
+}
+
 $apk = Join-Path $PSScriptRoot "build\app\outputs\flutter-apk\app-release.apk"
 if (Test-Path $apk) {
     Write-Host ""
