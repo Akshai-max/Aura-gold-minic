@@ -70,30 +70,38 @@ Future<SchemeCompletionResult?> showSchemeCompletionDialog(
             height: 1.45,
           ),
         ),
-        actionsAlignment: MainAxisAlignment.stretch,
         actions: [
-          FilledButton.icon(
-            onPressed: () => Navigator.of(dialogContext).pop(
-              const SchemeCompletionResult(SchemeCompletionChoice.sell),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton.icon(
+              onPressed: () => Navigator.of(dialogContext).pop(
+                const SchemeCompletionResult(SchemeCompletionChoice.sell),
+              ),
+              icon: const Icon(Icons.sell_outlined, size: 18),
+              label: Text(l10n.goldSchemeCompletionSell),
             ),
-            icon: const Icon(Icons.sell_outlined, size: 18),
-            label: Text(l10n.goldSchemeCompletionSell),
           ),
           for (final grams in upgradeOptions) ...[
             const SizedBox(height: 8),
-            OutlinedButton(
-              onPressed: () => Navigator.of(dialogContext).pop(
-                SchemeCompletionResult(SchemeCompletionChoice.upgrade, grams),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton(
+                onPressed: () => Navigator.of(dialogContext).pop(
+                  SchemeCompletionResult(SchemeCompletionChoice.upgrade, grams),
+                ),
+                child: Text(l10n.goldSchemeCompletionUpgrade(grams)),
               ),
-              child: Text(l10n.goldSchemeCompletionUpgrade(grams)),
             ),
           ],
           const SizedBox(height: 8),
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(
-              const SchemeCompletionResult(SchemeCompletionChoice.stay),
+          SizedBox(
+            width: double.infinity,
+            child: TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(
+                const SchemeCompletionResult(SchemeCompletionChoice.stay),
+              ),
+              child: Text(l10n.goldSchemeCompletionStay),
             ),
-            child: Text(l10n.goldSchemeCompletionStay),
           ),
         ],
       );
