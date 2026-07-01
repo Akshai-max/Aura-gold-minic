@@ -24,7 +24,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 5, vsync: this);
+    _tabController = TabController(length: 2, vsync: this);
   }
 
   @override
@@ -60,7 +60,6 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen>
   Widget build(BuildContext context) {
     final analyticsAsync = ref.watch(analyticsOverviewProvider);
     final canExport = _canExport(ref);
-    final currency = NumberFormat.currency(symbol: '₹', decimalDigits: 0);
 
     return ResponsiveNavigationWrapper(
       title: 'Reports & Analytics',
@@ -78,13 +77,9 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen>
             color: Theme.of(context).cardColor,
             child: TabBar(
               controller: _tabController,
-              isScrollable: true,
               tabs: const [
-                Tab(text: 'Revenue'),
-                Tab(text: 'Inventory'),
-                Tab(text: 'Customers'),
-                Tab(text: 'Transactions'),
-                Tab(text: 'Audit'),
+                Tab(text: 'App Revenue'),
+                Tab(text: 'Metal Inventory'),
               ],
             ),
           ),
@@ -94,13 +89,6 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen>
               children: [
                 _RevenueTab(canExport: canExport, onExport: _export),
                 _InventoryTab(canExport: canExport, onExport: _export),
-                _CustomerTab(
-                  canExport: canExport,
-                  onExport: _export,
-                  currency: currency,
-                ),
-                _TransactionTab(canExport: canExport, onExport: _export),
-                _AuditTab(canExport: canExport, onExport: _export),
               ],
             ),
           ),
@@ -179,6 +167,74 @@ class _KpiCardWidget extends StatelessWidget {
   }
 }
 
+class _MethodologySection extends StatelessWidget {
+  final List<MetricMethodology> items;
+
+  const _MethodologySection({required this.items});
+
+  @override
+  Widget build(BuildContext context) {
+    if (items.isEmpty) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 8, 24, 0),
+      child: Card(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.info_outline, color: AppTheme.sapphireBlue, size: 20),
+                  const SizedBox(width: 8),
+                  const Text(
+                    'How these numbers are calculated',
+                    style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              ...items.map((m) => Padding(
+                    padding: const EdgeInsets.only(bottom: 16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          m.title,
+                          style: const TextStyle(fontWeight: FontWeight.w700),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          m.formula,
+                          style: TextStyle(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurface
+                                .withValues(alpha: 0.85),
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Source: ${m.dataSource}',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurface
+                                .withValues(alpha: 0.55),
+                          ),
+                        ),
+                      ],
+                    ),
+                  )),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _ExportBar extends StatelessWidget {
   final String reportType;
   final bool canExport;
@@ -249,39 +305,49 @@ class _RevenueTab extends ConsumerWidget {
             ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Card(
-                child: ListTile(
-                  title: const Text('Period Total'),
-                  subtitle: Text('${report.transactionCount} transactions'),
-                  trailing: Text(
-                    currency.format(report.totalRevenue),
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: _SummaryTile(
+                      label: 'Daily Revenue',
+                      value: currency.format(report.dailyRevenue),
                     ),
                   ),
-                ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _SummaryTile(
+                      label: 'Monthly Revenue',
+                      value: currency.format(report.monthlyRevenue),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _SummaryTile(
+                      label: 'All-time Revenue',
+                      value: currency.format(report.totalRevenue),
+                    ),
+                  ),
+                ],
               ),
             ),
             Padding(
               padding: const EdgeInsets.all(24),
               child: PremiumTrendChart(
-                title: 'Revenue Trend',
-                subtitle: 'Daily net revenue (last 30 days)',
+                title: 'App Revenue Trend',
+                subtitle: 'Paid gold/silver purchases per day (last 30 days)',
                 values: report.dailyTrend.map((p) => p.revenue).toList(),
-                labels: report.dailyTrend.map((p) => p.label).toList(),
+                labels: report.dailyTrend
+                    .map(
+                      (p) => p.label.length > 10 ? p.label.substring(5) : p.label,
+                    )
+                    .toList(),
                 lineColor: AppTheme.emerald,
                 badge: report.revenueGrowthPercent != null
                     ? '${report.revenueGrowthPercent! >= 0 ? '+' : ''}${report.revenueGrowthPercent!.toStringAsFixed(1)}% MoM'
                     : null,
               ),
             ),
-            ...report.topCustomers.map(
-              (c) => ListTile(
-                title: Text(c['full_name'] as String? ?? ''),
-                trailing: Text(currency.format(_dec(c['revenue']))),
-              ),
-            ),
+            _MethodologySection(items: report.methodology),
           ],
         ),
       ),
@@ -301,6 +367,7 @@ class _InventoryTab extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final reportAsync = ref.watch(inventoryReportProvider);
     final currency = NumberFormat.currency(symbol: '₹', decimalDigits: 0);
+    final gramsFmt = NumberFormat('#,##0.##');
 
     return reportAsync.when(
       data: (report) => RefreshIndicator(
@@ -319,221 +386,63 @@ class _InventoryTab extends ConsumerWidget {
                 children: [
                   Expanded(
                     child: _SummaryTile(
-                      label: 'Total Stock',
-                      value: '${report.totalStock}',
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _SummaryTile(
-                      label: 'Value',
+                      label: 'Metal Inventory Value',
                       value: currency.format(report.inventoryValue),
                     ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: _SummaryTile(
-                      label: 'Low Stock',
+                      label: 'Stock Alerts',
                       value: '${report.lowStockCount}',
                     ),
                   ),
                 ],
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: PremiumTrendChart(
-                title: 'Inventory Movement',
-                subtitle: 'Net stock change per day',
-                values: report.movementTrend
-                    .map((p) => p.netChange.toDouble())
-                    .toList(),
-                labels: report.movementTrend.map((p) => p.label).toList(),
-                lineColor: AppTheme.sapphireBlue,
-              ),
-            ),
-            const Padding(
-              padding: EdgeInsets.fromLTRB(24, 16, 24, 8),
-              child: Text(
-                'By Category',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-              ),
-            ),
-            ...report.byCategory.map(
-              (c) => ListTile(
-                title: Text(
-                  (c['category'] as String? ?? '').replaceAll('_', ' '),
+            if (report.metalBreakdown.isNotEmpty) ...[
+              const Padding(
+                padding: EdgeInsets.fromLTRB(24, 0, 24, 8),
+                child: Text(
+                  'Valuation breakdown',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                 ),
-                subtitle: Text(
-                  '${c['item_count']} items • ${c['total_stock']} units',
-                ),
-                trailing: Text(currency.format(_dec(c['category_value']))),
               ),
-            ),
-          ],
-        ),
-      ),
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, _) => Center(child: Text('Error: $e')),
-    );
-  }
-}
-
-class _CustomerTab extends ConsumerWidget {
-  final bool canExport;
-  final Future<void> Function(String, String) onExport;
-  final NumberFormat currency;
-
-  const _CustomerTab({
-    required this.canExport,
-    required this.onExport,
-    required this.currency,
-  });
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final reportAsync = ref.watch(customerReportProvider);
-
-    return reportAsync.when(
-      data: (report) => RefreshIndicator(
-        onRefresh: () => ref.refresh(customerReportProvider.future),
-        child: ListView(
-          padding: const EdgeInsets.only(bottom: 24),
-          children: [
-            _ExportBar(
-              reportType: 'customer',
-              canExport: canExport,
-              onExport: onExport,
-            ),
-            Padding(
-              padding: const EdgeInsets.all(24),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: _SummaryTile(
-                      label: 'Active',
-                      value: '${report.activeCustomers}',
-                    ),
+              ...report.metalBreakdown.map(
+                (row) => ListTile(
+                  title: Text(row['metal_type'] as String? ?? ''),
+                  subtitle: Text(
+                    '${gramsFmt.format(_dec(row['available_grams']))} g available × '
+                    '${currency.format(_dec(row['rate_per_gram']))}/g',
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _SummaryTile(
-                      label: 'Total Revenue',
-                      value: currency.format(report.totalRevenue),
-                    ),
+                  trailing: Text(
+                    currency.format(_dec(row['value_inr'])),
+                    style: const TextStyle(fontWeight: FontWeight.w700),
                   ),
-                ],
-              ),
-            ),
-            const ListTile(
-              title: Text(
-                'Top Customers',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-            ),
-            ...report.topCustomers.map(
-              (c) => ListTile(
-                title: Text(c['full_name'] as String? ?? ''),
-                trailing: Text(currency.format(_dec(c['revenue']))),
-              ),
-            ),
-          ],
-        ),
-      ),
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, _) => Center(child: Text('Error: $e')),
-    );
-  }
-}
-
-class _TransactionTab extends ConsumerWidget {
-  final bool canExport;
-  final Future<void> Function(String, String) onExport;
-
-  const _TransactionTab({required this.canExport, required this.onExport});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final reportAsync = ref.watch(transactionReportProvider);
-    final currency = NumberFormat.currency(symbol: '₹', decimalDigits: 0);
-
-    return reportAsync.when(
-      data: (report) => RefreshIndicator(
-        onRefresh: () => ref.refresh(transactionReportProvider.future),
-        child: ListView(
-          padding: const EdgeInsets.only(bottom: 24),
-          children: [
-            _ExportBar(
-              reportType: 'transaction',
-              canExport: canExport,
-              onExport: onExport,
-            ),
-            ListTile(
-              title: const Text('Total Transactions'),
-              trailing: Text(
-                '${report.totalCount}',
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
                 ),
               ),
-            ),
-            ...report.breakdown.map(
-              (row) => ListTile(
-                title: Text(
-                  '${row['transaction_type']} / ${row['payment_status']}',
-                ),
-                subtitle: Text('${row['count']} transactions'),
-                trailing: Text(currency.format(_dec(row['total_amount']))),
-              ),
-            ),
-          ],
-        ),
-      ),
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, _) => Center(child: Text('Error: $e')),
-    );
-  }
-}
-
-class _AuditTab extends ConsumerWidget {
-  final bool canExport;
-  final Future<void> Function(String, String) onExport;
-
-  const _AuditTab({required this.canExport, required this.onExport});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final reportAsync = ref.watch(auditReportProvider);
-
-    return reportAsync.when(
-      data: (report) => RefreshIndicator(
-        onRefresh: () => ref.refresh(auditReportProvider.future),
-        child: ListView(
-          padding: const EdgeInsets.only(bottom: 24),
-          children: [
-            _ExportBar(
-              reportType: 'audit',
-              canExport: canExport,
-              onExport: onExport,
-            ),
-            ListTile(
-              title: const Text('Total Events'),
-              trailing: Text(
-                '${report.totalEvents}',
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
+            ],
+            if (report.valuationFormula.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 8, 24, 0),
+                child: Card(
+                  child: ListTile(
+                    leading: Icon(Icons.functions, color: AppTheme.amber),
+                    title: const Text('Valuation formula'),
+                    subtitle: Text(report.valuationFormula),
+                  ),
                 ),
               ),
-            ),
-            ...report.breakdown.map(
-              (row) => ListTile(
-                title: Text(
-                  (row['action'] as String? ?? '').replaceAll('_', ' '),
+            const _MethodologySection(
+              items: [
+                MetricMethodology(
+                  key: 'metal_inventory_value',
+                  title: 'Metal Inventory Value',
+                  formula:
+                      'Σ (available grams × current retail rate per gram) for gold and silver',
+                  dataSource: 'digital_metal_inventory + live metal prices',
                 ),
-                trailing: Text('${row['count']}'),
-              ),
+              ],
             ),
           ],
         ),

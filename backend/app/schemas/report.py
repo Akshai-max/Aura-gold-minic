@@ -39,22 +39,37 @@ class ActivityTrendPoint(BaseModel):
     count: int
 
 
+class MetricMethodology(BaseModel):
+    key: str
+    title: str
+    formula: str
+    data_source: str
+
+
 class AnalyticsOverviewResponse(BaseModel):
     kpis: list[KpiCard] = []
     revenue_trend: list[RevenueTrendPoint] = []
     inventory_trend: list[InventoryTrendPoint] = []
     revenue_growth_percent: Optional[Decimal] = None
     activity_trend: list[ActivityTrendPoint] = []
+    methodology: list[MetricMethodology] = []
+    daily_revenue: Optional[Decimal] = None
+    monthly_revenue: Optional[Decimal] = None
+    total_revenue: Optional[Decimal] = None
+    metal_inventory_value: Optional[Decimal] = None
 
 
 class RevenueReportResponse(BaseModel):
     period_start: datetime
     period_end: datetime
     total_revenue: Decimal
+    daily_revenue: Decimal = Decimal("0")
+    monthly_revenue: Decimal = Decimal("0")
     transaction_count: int
     revenue_growth_percent: Optional[Decimal] = None
     daily_trend: list[RevenueTrendPoint] = []
     top_customers: list[dict] = []
+    methodology: list[MetricMethodology] = []
 
 
 class InventoryCategoryRow(BaseModel):
@@ -64,6 +79,13 @@ class InventoryCategoryRow(BaseModel):
     category_value: Decimal
 
 
+class MetalStockRow(BaseModel):
+    metal_type: str
+    available_grams: Decimal
+    rate_per_gram: Decimal
+    value_inr: Decimal
+
+
 class InventoryReportResponse(BaseModel):
     total_stock: int
     inventory_value: Decimal
@@ -71,6 +93,8 @@ class InventoryReportResponse(BaseModel):
     item_count: int
     by_category: list[InventoryCategoryRow] = []
     movement_trend: list[InventoryTrendPoint] = []
+    metal_breakdown: list[MetalStockRow] = []
+    valuation_formula: str = ""
 
 
 class CustomerTypeRow(BaseModel):

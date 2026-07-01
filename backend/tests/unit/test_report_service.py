@@ -12,6 +12,7 @@ from app.models.permission import Permission
 from app.models.role import Role
 from app.models.transaction import Transaction
 from app.models.user import User
+from app.schemas.dashboard import MetalPricesResponse, MetalQuote
 from app.services.report import ReportService
 
 
@@ -49,6 +50,62 @@ def clear_report_cache():
     report_module._cache.clear()
     yield
     report_module._cache.clear()
+
+
+@pytest.fixture
+def mock_app_metrics_repo():
+    repo = MagicMock()
+    repo.paid_revenue_sum = AsyncMock(return_value=Decimal("50000"))
+    repo.paid_revenue_period_summary = AsyncMock(
+        return_value={"total_revenue": Decimal("1000"), "transaction_count": 3}
+    )
+    repo.payment_revenue_growth_percent = AsyncMock(return_value=Decimal("12.5"))
+    repo.payment_revenue_trend = AsyncMock(
+        return_value=[
+            {
+                "label": "2026-06-01",
+                "revenue": Decimal("500"),
+                "transaction_count": 1,
+            }
+        ]
+    )
+    return repo
+
+
+@pytest.fixture
+def mock_digital_inventory_repo():
+    repo = MagicMock()
+    gold = MagicMock()
+    gold.metal_type = "gold"
+    gold.available_weight_grams = Decimal("1000")
+    gold.low_stock_threshold_grams = Decimal("100")
+    silver = MagicMock()
+    silver.metal_type = "silver"
+    silver.available_weight_grams = Decimal("5000")
+    silver.low_stock_threshold_grams = Decimal("500")
+    repo.list_all = AsyncMock(return_value=[gold, silver])
+    return repo
+
+
+@pytest.fixture
+def mock_metal_price_service():
+    service = MagicMock()
+    service.get_prices = AsyncMock(
+        return_value=MetalPricesResponse(
+            refreshed_at=_now(),
+            gold=MetalQuote(
+                metal="gold",
+                retail_price=Decimal("9000"),
+                change_percent=Decimal("0"),
+            ),
+            silver=MetalQuote(
+                metal="silver",
+                retail_price=Decimal("100"),
+                change_percent=Decimal("0"),
+            ),
+        )
+    )
+    return service
 
 
 @pytest.fixture
@@ -171,8 +228,20 @@ def mock_audit_service():
 
 
 @pytest.fixture
-def report_service(mock_report_repo, mock_audit_service):
-    return ReportService(mock_report_repo, mock_audit_service)
+def report_service(
+    mock_report_repo,
+    mock_app_metrics_repo,
+    mock_digital_inventory_repo,
+    mock_metal_price_service,
+    mock_audit_service,
+):
+    return ReportService(
+        mock_report_repo,
+        mock_app_metrics_repo,
+        mock_digital_inventory_repo,
+        mock_metal_price_service,
+        mock_audit_service,
+    )
 
 
 @pytest.mark.asyncio
@@ -189,9 +258,9 @@ async def test_get_analytics_overview(report_service):
 
     assert overview.kpis
     assert overview.revenue_trend
-    assert overview.inventory_trend
-    assert overview.activity_trend
     assert overview.revenue_growth_percent == Decimal("12.5")
+    assert overview.methodology
+    assert overview.daily_revenue is not None
 
 
 @pytest.mark.asyncio
@@ -201,23 +270,24 @@ async def test_get_analytics_overview_uses_cache(report_service):
     await report_service.get_analytics_overview(user)
     await report_service.get_analytics_overview(user)
 
-    assert report_service.report_repo.revenue_growth_percent.await_count == 1
+    assert report_service.app_metrics_repo.payment_revenue_growth_percent.await_count == 1
 
 
 @pytest.mark.asyncio
 async def test_get_revenue_report(report_service):
     user = _user("report.view", "transaction.view")
     report = await report_service.get_revenue_report(user)
-    assert report.total_revenue == Decimal("1000")
+    assert report.total_revenue == Decimal("50000")
     assert report.daily_trend
+    assert report.methodology
 
 
 @pytest.mark.asyncio
 async def test_get_inventory_report(report_service):
     user = _user("report.view", "inventory.view")
     report = await report_service.get_inventory_report(user)
-    assert report.total_stock == 50
-    assert report.by_category
+    assert report.inventory_value > 0
+    assert report.metal_breakdown
 
 
 @pytest.mark.asyncio
@@ -317,8 +387,19 @@ async def test_unknown_report_type(report_service):
 
 
 @pytest.mark.asyncio
-async def test_audit_export_without_audit_service(mock_report_repo):
-    service = ReportService(mock_report_repo, audit_service=None)
+async def test_audit_export_without_audit_service(
+    mock_report_repo,
+    mock_app_metrics_repo,
+    mock_digital_inventory_repo,
+    mock_metal_price_service,
+):
+    service = ReportService(
+        mock_report_repo,
+        mock_app_metrics_repo,
+        mock_digital_inventory_repo,
+        mock_metal_price_service,
+        audit_service=None,
+    )
     user = _user("report.export", "report.view", "audit.view")
     content, _, _, row_count, truncated = await service.export_report(
         "audit", "csv", user
@@ -374,7 +455,7 @@ async def test_get_analytics_overview_inventory_only(report_service):
     user = _user("inventory.view")
     overview = await report_service.get_analytics_overview(user)
     assert overview.revenue_trend == []
-    assert overview.inventory_trend
+    assert overview.metal_inventory_value is not None
 
 
 @pytest.mark.asyncio
